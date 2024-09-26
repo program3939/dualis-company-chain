@@ -50,29 +50,40 @@
             background-color: #45a049;
         }
 
-        table {
+        .info-message {
+            color: blue;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .coin-animation {
+            width: 50px;
+            height: 50px;
+            background-image: url('coin.png'); /* Hier könntest du eine Coin-Bild-URL einfügen */
+            animation: coinSpin 1s ease-in-out forwards;
+        }
+
+        @keyframes coinSpin {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Diagramm */
+        #coinChart {
             width: 100%;
-            border-collapse: collapse;
+            height: 300px;
         }
 
-        th, td {
-            border: 1px solid #dddddd;
-            text-align: left;
-            padding: 8px;
+        /* Admin-Panel */
+        #adminPanel {
+            display: none;
         }
 
-        th {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        /* Fehlermeldungen stilisieren */
         .error-message {
             color: red;
             font-weight: bold;
         }
 
-        /* Responsive Design */
         @media (max-width: 600px) {
             input[type="text"], input[type="password"], button {
                 width: 100%;
@@ -93,26 +104,19 @@
     <main>
         <section id="interactive-machine">
             <h2>Interaktiver Automat</h2>
+            <div class="info-message">
+                Hinweis: Bitte trage deinen Discord-Namen ein, damit wir den Coin dir zuordnen können!
+            </div>
+            <input type="text" id="usernameInput" placeholder="Benutzername (am besten Discord-Name)">
             <input type="text" id="codeInput" maxlength="8" placeholder="Code eingeben">
             <button onclick="submitCode()">Einreichen</button>
             <div id="message" class="error-message"></div>
+            <div id="coinAnimation" class="coin-animation" style="display:none;"></div>
         </section>
 
-        <section id="price-table">
-            <h2>Aktueller Coin-Preis</h2>
-            <p id="coinPrice">10.00 €</p>
-            <h3>Erfasste Codes</h3>
-            <table id="codeList">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Datum</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Codes werden hier dynamisch hinzugefügt -->
-                </tbody>
-            </table>
+        <section id="price-chart">
+            <h2>Coin-Wert-Diagramm</h2>
+            <canvas id="coinChart"></canvas> <!-- Hier wird das Diagramm eingefügt -->
         </section>
 
         <section id="employee-access">
@@ -120,7 +124,7 @@
             <input type="text" id="username" placeholder="Benutzername">
             <input type="password" id="password" placeholder="Passwort">
             <button onclick="login()">Einloggen</button>
-            <div id="adminPanel" style="display:none;">
+            <div id="adminPanel">
                 <h3>Admin-Panel</h3>
                 <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
                 <button onclick="addCode()">Code hinzufügen</button>
@@ -131,42 +135,63 @@
 
     <footer>
         <p>&copy; 2024 Dual-Coin. Alle Rechte vorbehalten.</p>
-        <p><strong>Sicherheitshinweis:</strong> Bitte stelle sicher, dass diese Website sicher ist, bevor du sie öffentlich zugänglich machst.</p>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js für das Diagramm -->
     <script>
-        let codes = []; // Liste der gültigen Codes
+        let codes = ['VALIDCODE1', 'VALIDCODE2']; // Beispielhafte Admin-Codes
         let coinPrice = 10.00;
         let lastCodeTime = Date.now();
+        let coinHistory = [coinPrice]; // Verlauf des Coin-Preises
 
         function submitCode() {
             const codeInput = document.getElementById("codeInput").value;
+            const usernameInput = document.getElementById("usernameInput").value;
             const message = document.getElementById("message");
+            const coinAnimation = document.getElementById("coinAnimation");
 
-            console.log("Eingegebener Code:", codeInput); // Debugging-Ausgabe
-
-            // Überprüfen, ob der eingegebene Code in der Liste der gültigen Codes ist
             if (codeInput.length > 0 && codeInput.length <= 8 && codes.includes(codeInput)) {
                 lastCodeTime = Date.now();
                 coinPrice *= 1.05; // Erhöhung um 5%
-                updateUI(codeInput);
+                coinHistory.push(coinPrice); // Coin-Preis zur Historie hinzufügen
+                updateChart();
                 message.textContent = "Code erfolgreich eingereicht!";
                 message.className = ""; // Fehlerklasse zurücksetzen
+
+                // Coin-Animation anzeigen
+                coinAnimation.style.display = "block";
+                setTimeout(() => {
+                    coinAnimation.style.display = "none";
+                }, 1000);
             } else {
                 message.textContent = "Ungültiger Code!";
                 message.className = "error-message"; // Fehlerklasse hinzufügen
             }
 
             document.getElementById("codeInput").value = "";
+            document.getElementById("usernameInput").value = ""; // Benutzernamen zurücksetzen
         }
 
-        function updateUI(code) {
-            const codeList = document.getElementById("codeList").getElementsByTagName('tbody')[0];
-            const newRow = codeList.insertRow();
-            newRow.insertCell(0).textContent = code;
-            newRow.insertCell(1).textContent = new Date().toLocaleString();
-
-            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " €";
+        function updateChart() {
+            const ctx = document.getElementById('coinChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: coinHistory.length}, (_, i) => i + 1),
+                    datasets: [{
+                        label: 'Coin-Wert',
+                        data: coinHistory,
+                        borderColor: 'green',
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: { display: true, title: { display: true, text: 'Transaktionen' } },
+                        y: { display: true, title: { display: true, text: 'Preis (€)' } }
+                    }
+                }
+            });
         }
 
         function login() {
@@ -185,10 +210,8 @@
             const newCodeInput = document.getElementById("newCodeInput").value;
             const adminMessage = document.getElementById("adminMessage");
 
-            console.log("Neuer Code:", newCodeInput); // Debugging-Ausgabe
-
             if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes.includes(newCodeInput)) {
-                codes.push(newCodeInput); // Neuen Code zur Liste hinzufügen
+                codes.push(newCodeInput);
                 adminMessage.textContent = "Neuer Code erfolgreich hinzugefügt!";
                 adminMessage.className = ""; // Fehlerklasse zurücksetzen
             } else {
@@ -203,9 +226,13 @@
         setInterval(() => {
             if (Date.now() - lastCodeTime > 604800000) { // 604800000 ms = 1 Woche
                 coinPrice *= 0.8; // Senkung um 20%
-                document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " €";
+                coinHistory.push(coinPrice); // Coin-Preis zur Historie hinzufügen
+                updateChart(); // Diagramm aktualisieren
             }
         }, 60000); // Überprüfen jede Minute
+
+        // Initialisiere das Diagramm bei Seite laden
+        updateChart();
     </script>
 </body>
 </html>
