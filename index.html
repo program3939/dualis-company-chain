@@ -31,7 +31,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        input[type="text"], input[type="password"] {
+        input[type="text"], input[type="password"], input[type="email"], input[type="number"] {
             width: 200px;
             padding: 10px;
             margin: 10px 0;
@@ -50,42 +50,53 @@
             background-color: #45a049;
         }
 
-        .info-message {
-            color: blue;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .coin-animation {
-            width: 50px;
-            height: 50px;
-            background-image: url('coin.png'); /* Hier könntest du eine Coin-Bild-URL einfügen */
-            animation: coinSpin 1s ease-in-out forwards;
-        }
-
-        @keyframes coinSpin {
-            0% { transform: scale(0); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        /* Diagramm */
-        #coinChart {
+        table {
             width: 100%;
-            height: 300px;
+            border-collapse: collapse;
+            display: none; /* Tabelle unsichtbar machen */
         }
 
-        /* Admin-Panel */
-        #adminPanel {
-            display: none;
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
         }
 
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        /* Fehlermeldungen stilisieren */
         .error-message {
             color: red;
             font-weight: bold;
+            display: none; /* Anfangs unsichtbar */
         }
 
+        .important {
+            color: red; /* Wichtiges rot machen */
+        }
+
+        /* Info-Kasten */
+        .info-box {
+            border: 1px solid red;
+            background-color: #ffe6e6;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        /* Einstellungen Symbol */
+        .settings-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+
+        /* Responsive Design */
         @media (max-width: 600px) {
-            input[type="text"], input[type="password"], button {
+            input[type="text"], input[type="password"], input[type="email"], input[type="number"], button {
                 width: 100%;
                 margin: 10px 0;
             }
@@ -95,41 +106,59 @@
             }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header>
         <h1>Willkommen bei Dual-Coin</h1>
     </header>
 
+    <!-- Schaltflächen oben links -->
+    <nav style="position: absolute; top: 10px; left: 10px;">
+        <button onclick="transferCoins()">Überweisen</button>
+    </nav>
+
+    <!-- Zahnrad-Symbol oben rechts -->
+    <div class="settings-icon" onclick="openSettings()">
+        ⚙️
+    </div>
+
     <main>
-        <section id="interactive-machine">
-            <h2>Interaktiver Automat</h2>
-            <div class="info-message">
-                Hinweis: Bitte trage deinen Discord-Namen ein, damit wir den Coin dir zuordnen können!
+        <!-- Registrierung -->
+        <section id="registration-section">
+            <h2>Registrieren</h2>
+            <p class="important">Bitte registrieren Sie sich, um den Automaten zu nutzen. Wir benötigen Ihre Role-Play-Daten.</p>
+            <form onsubmit="register(event)">
+                <input type="email" id="email" placeholder="E-Mail-Adresse" required><br>
+                <input type="text" id="discordName" placeholder="Discord-Name" required><br>
+                <input type="password" id="password" placeholder="Passwort" required><br>
+                <button type="submit">Registrieren</button>
+            </form>
+            <div class="info-box important">
+                <p>Merken Sie sich diese Daten! Sie sind entscheidend für den weiteren Zugang.</p>
             </div>
-            <input type="text" id="usernameInput" placeholder="Benutzername (am besten Discord-Name)">
+        </section>
+
+        <!-- Interaktiver Automat (wird nach der Registrierung angezeigt) -->
+        <section id="interactive-machine" style="display:none;">
+            <h2>Interaktiver Automat</h2>
             <input type="text" id="codeInput" maxlength="8" placeholder="Code eingeben">
             <button onclick="submitCode()">Einreichen</button>
             <div id="message" class="error-message"></div>
-            <div id="coinAnimation" class="coin-animation" style="display:none;"></div>
+            <canvas id="coinChart" width="400" height="200"></canvas> <!-- Coin-Chart -->
         </section>
 
-        <section id="price-chart">
-            <h2>Coin-Wert-Diagramm</h2>
-            <canvas id="coinChart"></canvas> <!-- Hier wird das Diagramm eingefügt -->
-        </section>
-
-        <section id="employee-access">
-            <h2>Mitarbeiterzugang</h2>
-            <input type="text" id="username" placeholder="Benutzername">
-            <input type="password" id="password" placeholder="Passwort">
-            <button onclick="login()">Einloggen</button>
-            <div id="adminPanel">
-                <h3>Admin-Panel</h3>
-                <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
-                <button onclick="addCode()">Code hinzufügen</button>
-                <div id="adminMessage" class="error-message"></div>
-            </div>
+        <!-- Admin-Panel für eingeloggte Admins -->
+        <section id="employee-access" style="display:none;">
+            <h2>Admin-Panel</h2>
+            <input type="text" id="adminUsername" placeholder="Benutzername" required><br>
+            <input type="password" id="adminPassword" placeholder="Passwort" required><br>
+            <div id="adminMessage" class="error-message"></div>
+            <h3>Coins verwalten</h3>
+            <input type="text" id="targetUser" placeholder="Zielbenutzer (Discord-Name)" required><br>
+            <input type="number" id="coinsAmount" placeholder="Anzahl Coins" required><br>
+            <button onclick="addCoins()">Coins hinzufügen</button>
+            <button onclick="removeCoins()">Coins entfernen</button>
         </section>
     </main>
 
@@ -137,102 +166,156 @@
         <p>&copy; 2024 Dual-Coin. Alle Rechte vorbehalten.</p>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js für das Diagramm -->
     <script>
-        let codes = ['VALIDCODE1', 'VALIDCODE2']; // Beispielhafte Admin-Codes
+        let codes = [];
         let coinPrice = 10.00;
-        let lastCodeTime = Date.now();
-        let coinHistory = [coinPrice]; // Verlauf des Coin-Preises
+        let userRegistered = false;
+        let userCoins = 0;
+        let userCardNumber = Math.random().toString(36).substr(2, 8).toUpperCase(); // Zufällige Kartennummer generieren
+        let adminLoggedIn = false;
+
+        function register(event) {
+            event.preventDefault();
+            const email = document.getElementById("email").value;
+            const discordName = document.getElementById("discordName").value;
+            const password = document.getElementById("password").value;
+
+            if (email && discordName && password) {
+                userRegistered = true;
+                document.getElementById("registration-section").style.display = "none";
+                document.getElementById("interactive-machine").style.display = "block";
+                alert("Erfolgreich registriert! Ihre Kartennummer: " + userCardNumber);
+            }
+        }
 
         function submitCode() {
+            if (!userRegistered) {
+                showMessage("Bitte registrieren Sie sich zuerst!", true);
+                return;
+            }
+
             const codeInput = document.getElementById("codeInput").value;
-            const usernameInput = document.getElementById("usernameInput").value;
-            const message = document.getElementById("message");
-            const coinAnimation = document.getElementById("coinAnimation");
 
-            if (codeInput.length > 0 && codeInput.length <= 8 && codes.includes(codeInput)) {
-                lastCodeTime = Date.now();
+            if (codes.includes(codeInput)) {
                 coinPrice *= 1.05; // Erhöhung um 5%
-                coinHistory.push(coinPrice); // Coin-Preis zur Historie hinzufügen
-                updateChart();
-                message.textContent = "Code erfolgreich eingereicht!";
-                message.className = ""; // Fehlerklasse zurücksetzen
-
-                // Coin-Animation anzeigen
-                coinAnimation.style.display = "block";
-                setTimeout(() => {
-                    coinAnimation.style.display = "none";
-                }, 1000);
+                userCoins++;
+                updateUI();
+                showMessage("Code erfolgreich eingereicht! Sie haben nun " + userCoins + " Coins.");
+                showCoinAnimation();
             } else {
-                message.textContent = "Ungültiger Code!";
-                message.className = "error-message"; // Fehlerklasse hinzufügen
+                showMessage("Ungültiger Code!", true);
             }
 
             document.getElementById("codeInput").value = "";
-            document.getElementById("usernameInput").value = ""; // Benutzernamen zurücksetzen
         }
 
-        function updateChart() {
+        function updateUI() {
+            // Aktualisierung der UI (z.B. Diagramm)
             const ctx = document.getElementById('coinChart').getContext('2d');
-            new Chart(ctx, {
+            // Beispielhafte Logik für das Diagramm
+            const chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: Array.from({length: coinHistory.length}, (_, i) => i + 1),
+                    labels: ['Tag 1', 'Tag 2', 'Tag 3', 'Tag 4', 'Tag 5'],
                     datasets: [{
-                        label: 'Coin-Wert',
-                        data: coinHistory,
-                        borderColor: 'green',
-                        fill: false
+                        label: 'Coin Preis',
+                        data: [10, 11, 12, 13, 14], // Beispielwerte
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        fill: false,
                     }]
                 },
                 options: {
                     scales: {
-                        x: { display: true, title: { display: true, text: 'Transaktionen' } },
-                        y: { display: true, title: { display: true, text: 'Preis (€)' } }
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
             });
         }
 
-        function login() {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-            const adminPanel = document.getElementById("adminPanel");
+        function showMessage(message, isError = false) {
+            const messageDiv = document.getElementById("message");
+            messageDiv.textContent = message;
+            messageDiv.style.display = "block";
+            if (isError) {
+                messageDiv.classList.add("error-message");
+            }
 
-            if (username === "Dualis" && password === "28102007") {
-                adminPanel.style.display = "block";
+            setTimeout(() => {
+                messageDiv.style.display = "none";
+            }, 3000); // Nach 3 Sekunden ausblenden
+        }
+
+        function showCoinAnimation() {
+            alert("Coin hinzugefügt! Animation kommt hier hin.");
+            // Hier könnte eine Animation eingebaut werden (z.B. mit CSS oder Canvas)
+        }
+
+        function transferCoins() {
+            alert("Hier können Sie Ihre Coins an andere Nutzer überweisen.");
+            // Logik für das Überweisen von Coins
+        }
+
+        function openSettings() {
+            alert("Kartennummer: " + userCardNumber + "\nAnzahl Coins: " + userCoins);
+        }
+
+        function adminLogin() {
+            const username = document.getElementById("adminUsername").value;
+            const password = document.getElementById("adminPassword").value;
+
+            if (username === "admin" && password === "password123") {
+                adminLoggedIn = true;
+                document.getElementById("employee-access").style.display = "block";
+                document.getElementById("adminMessage").style.display = "none";
             } else {
-                alert("Ungültige Anmeldeinformationen!");
+                document.getElementById("adminMessage").textContent = "Ungültiger Benutzername oder Passwort!";
+                document.getElementById("adminMessage").style.display = "block";
+                setTimeout(() => {
+                    document.getElementById("adminMessage").style.display = "none";
+                }, 3000); // Nach 3 Sekunden ausblenden
             }
         }
 
-        function addCode() {
-            const newCodeInput = document.getElementById("newCodeInput").value;
-            const adminMessage = document.getElementById("adminMessage");
-
-            if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes.includes(newCodeInput)) {
-                codes.push(newCodeInput);
-                adminMessage.textContent = "Neuer Code erfolgreich hinzugefügt!";
-                adminMessage.className = ""; // Fehlerklasse zurücksetzen
-            } else {
-                adminMessage.textContent = "Ungültiger Code!";
-                adminMessage.className = "error-message"; // Fehlerklasse hinzufügen
+        function addCoins() {
+            if (!adminLoggedIn) {
+                showMessage("Zugang zum Admin-Panel verweigert!", true);
+                return;
             }
 
-            document.getElementById("newCodeInput").value = "";
+            const targetUser = document.getElementById("targetUser").value;
+            const coinsAmount = parseInt(document.getElementById("coinsAmount").value);
+
+            if (targetUser && !isNaN(coinsAmount)) {
+                userCoins += coinsAmount;
+                showMessage(`Erfolgreich ${coinsAmount} Coins an ${targetUser} hinzugefügt!`);
+                document.getElementById("targetUser").value = "";
+                document.getElementById("coinsAmount").value = "";
+            } else {
+                showMessage("Bitte geben Sie einen gültigen Benutzer und Betrag an!", true);
+            }
         }
 
-        // Preisverfall nach einer Woche
-        setInterval(() => {
-            if (Date.now() - lastCodeTime > 604800000) { // 604800000 ms = 1 Woche
-                coinPrice *= 0.8; // Senkung um 20%
-                coinHistory.push(coinPrice); // Coin-Preis zur Historie hinzufügen
-                updateChart(); // Diagramm aktualisieren
+        function removeCoins() {
+            if (!adminLoggedIn) {
+                showMessage("Zugang zum Admin-Panel verweigert!", true);
+                return;
             }
-        }, 60000); // Überprüfen jede Minute
 
-        // Initialisiere das Diagramm bei Seite laden
-        updateChart();
+            const targetUser = document.getElementById("targetUser").value;
+            const coinsAmount = parseInt(document.getElementById("coinsAmount").value);
+
+            if (targetUser && !isNaN(coinsAmount) && userCoins >= coinsAmount) {
+                userCoins -= coinsAmount;
+                showMessage(`Erfolgreich ${coinsAmount} Coins von ${targetUser} entfernt!`);
+                document.getElementById("targetUser").value = "";
+                document.getElementById("coinsAmount").value = "";
+            } else {
+                showMessage("Bitte geben Sie einen gültigen Benutzer und Betrag an oder der Betrag ist zu hoch!", true);
+            }
+        }
     </script>
 </body>
 </html>
