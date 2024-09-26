@@ -113,7 +113,15 @@
             <input type="file" id="profileImageInput" accept="image/*" onchange="previewImage(event)">
             <img id="profileImage" src="" alt="Profilbild-Vorschau" style="display: none;">
             <button onclick="register()">Registrieren</button>
-            <button onclick="toggleForm()">Zu Anmelden wechseln</button> <!-- Button zum Wechseln -->
+            <button onclick="toggleToLogin()">Zu Anmelden wechseln</button> <!-- Button zum Wechseln -->
+        </section>
+
+        <section id="login" style="display: none;">
+            <h2>Anmeldung</h2>
+            <input type="text" id="loginDiscordName" placeholder="Discord-Name">
+            <input type="password" id="loginPassword" placeholder="Passwort">
+            <button onclick="login()">Anmelden</button>
+            <button onclick="toggleToRegister()">Zu Registrieren wechseln</button> <!-- Button zum Wechseln -->
         </section>
 
         <section id="interactive-machine" style="display: none;">
@@ -133,7 +141,7 @@
             <h2>Mitarbeiterzugang</h2>
             <input type="text" id="username" placeholder="Benutzername">
             <input type="password" id="adminPassword" placeholder="Passwort">
-            <button onclick="login()">Einloggen</button>
+            <button onclick="adminLogin()">Einloggen</button>
             <div id="adminPanel" style="display:none;">
                 <h3>Admin-Panel</h3>
                 <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
@@ -164,12 +172,14 @@
         let coinBalance = 0; // Kontostand der Coins
         let cardNumber = Math.floor(Math.random() * 90000000) + 10000000; // Zufällige 8-stellige Kartennummer
 
-        function toggleForm() {
-            const registrationSection = document.getElementById("registration");
-            const isRegistering = registrationSection.style.display !== "none";
-            registrationSection.style.display = isRegistering ? "none" : "block";
-            document.getElementById("interactive-machine").style.display = "none"; // Maschine verstecken
-            document.getElementById("formTitle").textContent = isRegistering ? "Anmeldung" : "Registrierung"; // Titel ändern
+        function toggleToRegister() {
+            document.getElementById("registration").style.display = "block"; // Registrierung sichtbar
+            document.getElementById("login").style.display = "none"; // Anmelden unsichtbar
+        }
+
+        function toggleToLogin() {
+            document.getElementById("login").style.display = "block"; // Anmelden sichtbar
+            document.getElementById("registration").style.display = "none"; // Registrierung unsichtbar
         }
 
         function previewImage(event) {
@@ -182,6 +192,17 @@
             // Registrierung logik
             document.getElementById("interactive-machine").style.display = "block"; // Maschine sichtbar
             document.getElementById("registration").style.display = "none"; // Registrierung unsichtbar
+            document.getElementById("settings").style.display = "block"; // Einstellungen sichtbar
+            document.getElementById("cardNumber").textContent = cardNumber; // Kartennummer setzen
+        }
+
+        function login() {
+            // Anmeldung logik
+            const discordName = document.getElementById("loginDiscordName").value;
+            const password = document.getElementById("loginPassword").value;
+            // Hier können Anmeldedaten geprüft werden
+            document.getElementById("interactive-machine").style.display = "block"; // Maschine sichtbar
+            document.getElementById("login").style.display = "none"; // Anmelden unsichtbar
             document.getElementById("settings").style.display = "block"; // Einstellungen sichtbar
             document.getElementById("cardNumber").textContent = cardNumber; // Kartennummer setzen
         }
@@ -203,27 +224,12 @@
                 message.textContent = "Ungültiger Code!";
                 message.className = "error-message"; // Fehlerklasse hinzufügen
             }
-
-            document.getElementById("codeInput").value = "";
         }
 
-        function updateUI(code) {
+        function updateUI() {
             document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " €";
-            document.getElementById("coinBalance").textContent = coinBalance; // Kontostand aktualisieren
+            document.getElementById("coinBalance").textContent = coinBalance;
             updateChart(); // Diagramm aktualisieren
-        }
-
-        function login() {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("adminPassword").value;
-            const adminPanel = document.getElementById("adminPanel");
-
-            if (username === "Dualis" && password === "28102007") {
-                adminPanel.style.display = "block";
-                document.getElementById("employee-access").style.display = "none"; // Mitarbeiterzugang verstecken
-            } else {
-                alert("Ungültige Anmeldeinformationen!");
-            }
         }
 
         function addCode() {
@@ -244,7 +250,6 @@
         }
 
         function sendCoins() {
-            // Logik zum Versenden von Coins
             const recipient = document.getElementById("recipient").value;
             const amount = parseInt(document.getElementById("amount").value);
 
@@ -262,7 +267,6 @@
         }
 
         function animateCoin() {
-            // Animation für Coin hinzufügen
             const coinAnimation = document.createElement("div");
             coinAnimation.textContent = "💰";
             coinAnimation.style.position = "absolute";
