@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dual-Coin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            text-align: center;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 0;
+        }
+
+        h1, h2 {
+            margin: 0;
+        }
+
+        section {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 200px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Willkommen bei Dual-Coin</h1>
+    </header>
+
+    <main>
+        <section id="interactive-machine">
+            <h2>Interaktiver Automat</h2>
+            <input type="text" id="codeInput" maxlength="8" placeholder="Code eingeben">
+            <button onclick="submitCode()">Einreichen</button>
+            <div id="message"></div>
+        </section>
+
+        <section id="price-table">
+            <h2>Aktueller Coin-Preis</h2>
+            <p id="coinPrice">10.00 €</p>
+            <h3>Erfasste Codes</h3>
+            <table id="codeList">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Datum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Codes werden hier dynamisch hinzugefügt -->
+                </tbody>
+            </table>
+        </section>
+
+        <section id="employee-access">
+            <h2>Mitarbeiterzugang</h2>
+            <input type="text" id="username" placeholder="Benutzername">
+            <input type="password" id="password" placeholder="Passwort">
+            <button onclick="login()">Einloggen</button>
+            <div id="adminPanel" style="display:none;">
+                <h3>Admin-Panel</h3>
+                <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
+                <button onclick="addCode()">Code hinzufügen</button>
+                <div id="adminMessage"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Dual-Coin. Alle Rechte vorbehalten.</p>
+    </footer>
+
+    <script>
+        let codes = [];
+        let coinPrice = 10.00;
+        let lastCodeTime = Date.now();
+
+        function submitCode() {
+            const codeInput = document.getElementById("codeInput").value;
+            const message = document.getElementById("message");
+
+            if (codeInput.length > 0 && codeInput.length <= 8 && !codes.includes(codeInput)) {
+                codes.push(codeInput);
+                lastCodeTime = Date.now();
+                coinPrice *= 1.05; // Erhöhung um 5%
+                updateUI(codeInput);
+                message.textContent = "Code erfolgreich eingereicht!";
+            } else {
+                message.textContent = "Ungültiger Code!";
+            }
+
+            document.getElementById("codeInput").value = "";
+        }
+
+        function updateUI(code) {
+            const codeList = document.getElementById("codeList").getElementsByTagName('tbody')[0];
+            const newRow = codeList.insertRow();
+            newRow.insertCell(0).textContent = code;
+            newRow.insertCell(1).textContent = new Date().toLocaleString();
+
+            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " €";
+        }
+
+        function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const adminPanel = document.getElementById("adminPanel");
+
+            if (username === "Dualis" && password === "28102007") {
+                adminPanel.style.display = "block";
+            } else {
+                alert("Ungültige Anmeldeinformationen!");
+            }
+        }
+
+        function addCode() {
+            const newCodeInput = document.getElementById("newCodeInput").value;
+            const adminMessage = document.getElementById("adminMessage");
+
+            if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes.includes(newCodeInput)) {
+                codes.push(newCodeInput);
+                adminMessage.textContent = "Neuer Code erfolgreich hinzugefügt!";
+            } else {
+                adminMessage.textContent = "Ungültiger Code!";
+            }
+
+            document.getElementById("newCodeInput").value = "";
+        }
+
+        // Preisverfall nach einer Woche
+        setInterval(() => {
+            if (Date.now() - lastCodeTime > 604800000) { // 604800000 ms = 1 Woche
+                coinPrice *= 0.8; // Senkung um 20%
+                document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " €";
+            }
+        }, 60000); // Überprüfen jede Minute
+    </script>
+</body>
+</html>
