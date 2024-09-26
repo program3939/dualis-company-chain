@@ -122,6 +122,7 @@
             <img id="profileImage" src="" alt="Profilbild-Vorschau" style="display: none;">
             <button onclick="register()">Registrieren</button>
             <button onclick="toggleToLogin()">Zu Anmelden wechseln</button>
+            <div id="registrationError" class="error-message" style="display:none;"></div>
         </section>
 
         <section id="login" style="display: none;">
@@ -130,6 +131,7 @@
             <input type="password" id="loginPassword" placeholder="Passwort" required>
             <button onclick="login()">Anmelden</button>
             <button onclick="toggleToRegister()">Zu Registrieren wechseln</button>
+            <div id="loginError" class="error-message" style="display:none;"></div>
         </section>
 
         <section id="interactive-machine" style="display: none;">
@@ -196,57 +198,64 @@
         }
 
         function register() {
-            document.getElementById("interactive-machine").style.display = "block";
-            document.getElementById("registration").style.display = "none";
-            document.getElementById("settings").style.display = "block";
-            document.getElementById("cardNumber").textContent = cardNumber;
+            const email = document.getElementById("email").value;
+            const discordName = document.getElementById("discordName").value;
+            const password = document.getElementById("password").value;
+            const profileImageInput = document.getElementById("profileImageInput").files.length;
+
+            const errorMessage = document.getElementById("registrationError");
+            errorMessage.style.display = "none";
+
+            if (email && discordName && password && profileImageInput) {
+                document.getElementById("interactive-machine").style.display = "block";
+                document.getElementById("registration").style.display = "none";
+                document.getElementById("settings").style.display = "block";
+                document.getElementById("cardNumber").textContent = cardNumber;
+            } else {
+                errorMessage.textContent = "Bitte füllen Sie alle Felder aus!";
+                errorMessage.style.display = "block";
+            }
         }
 
         function login() {
-            document.getElementById("interactive-machine").style.display = "block";
-            document.getElementById("login").style.display = "none";
-            document.getElementById("settings").style.display = "block";
-            document.getElementById("cardNumber").textContent = cardNumber;
+            const loginDiscordName = document.getElementById("loginDiscordName").value;
+            const loginPassword = document.getElementById("loginPassword").value;
+
+            const errorMessage = document.getElementById("loginError");
+            errorMessage.style.display = "none";
+
+            if (loginDiscordName && loginPassword) {
+                document.getElementById("interactive-machine").style.display = "block";
+                document.getElementById("login").style.display = "none";
+                document.getElementById("settings").style.display = "block";
+                document.getElementById("cardNumber").textContent = cardNumber;
+            } else {
+                errorMessage.textContent = "Bitte füllen Sie alle Felder aus!";
+                errorMessage.style.display = "block";
+            }
         }
 
         function submitCode() {
             const codeInput = document.getElementById("codeInput").value;
             const message = document.getElementById("message");
 
-            if (codes.includes(codeInput)) {
-                codes.push(codeInput);
-                coinPrice *= 1.05;
-                coinBalance++;
-                updateUI();
-                message.textContent = "Code erfolgreich eingereicht!";
-                message.className = ""; // Fehlerklasse zurücksetzen
-                animateCoin();
+            if (codeInput) {
+                if (codes.includes(codeInput)) {
+                    message.textContent = "Code erfolgreich eingelöst!";
+                    coinBalance += 1; // Beispiel: 1 Coin hinzufügen
+                    updateUI();
+                    animateCoin();
+                    updateChart();
+                } else {
+                    message.textContent = "Ungültiger Code! Bitte versuchen Sie es erneut.";
+                }
+                document.getElementById("codeInput").value = ""; // Eingabefeld leeren
             } else {
-                message.textContent = "Ungültiger Code!";
-                message.className = "error-message";
+                message.textContent = "Bitte geben Sie einen Code ein!";
             }
-        }
 
-        function updateUI() {
-            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " €";
-            document.getElementById("coinBalance").textContent = coinBalance;
-            updateChart();
-        }
-
-        function addCode() {
-            const newCodeInput = document.getElementById("newCodeInput").value;
-            const adminMessage = document.getElementById("adminMessage");
-            if (newCodeInput) {
-                codes.push(newCodeInput);
-                adminMessage.textContent = "Neuer Code hinzugefügt!";
-                adminMessage.className = ""; // Fehlerklasse zurücksetzen
-                document.getElementById("newCodeInput").value = ""; // Eingabefeld leeren
-            } else {
-                adminMessage.textContent = "Bitte geben Sie einen Code ein!";
-                adminMessage.className = "error-message"; // Fehlerklasse hinzufügen
-            }
             setTimeout(() => {
-                adminMessage.textContent = ""; // Nachricht nach 3 Sekunden löschen
+                message.textContent = ""; // Nachricht nach 3 Sekunden löschen
             }, 3000);
         }
 
@@ -279,6 +288,10 @@
             }, 1000);
         }
 
+        function updateUI() {
+            document.getElementById("coinBalance").textContent = coinBalance;
+        }
+
         function updateChart() {
             const ctx = document.getElementById('chart').getContext('2d');
             if (window.myChart) {
@@ -306,6 +319,35 @@
                     }
                 }
             });
+        }
+
+        function addCode() {
+            const newCode = document.getElementById("newCodeInput").value;
+            const adminMessage = document.getElementById("adminMessage");
+
+            if (newCode) {
+                codes.push(newCode);
+                adminMessage.textContent = "Code erfolgreich hinzugefügt!";
+                document.getElementById("newCodeInput").value = ""; // Eingabefeld leeren
+            } else {
+                adminMessage.textContent = "Bitte geben Sie einen Code ein!";
+                adminMessage.className = "error-message"; // Fehlerklasse hinzufügen
+            }
+            setTimeout(() => {
+                adminMessage.textContent = ""; // Nachricht nach 3 Sekunden löschen
+            }, 3000);
+        }
+
+        function adminLogin() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("adminPassword").value;
+
+            // Hier könnte eine echte Admin-Authentifizierung stattfinden
+            if (username === "admin" && password === "password") {
+                document.getElementById("adminPanel").style.display = "block";
+            } else {
+                alert("Ungültiger Benutzername oder Passwort!");
+            }
         }
     </script>
 </body>
