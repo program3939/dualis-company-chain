@@ -95,7 +95,6 @@
             }
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header>
@@ -129,6 +128,12 @@
             <button onclick="login()">Anmelden</button>
             <button onclick="toggleToRegister()">Zu Registrieren wechseln</button>
             <div id="loginError" class="error-message" style="display:none;"></div>
+        </section>
+
+        <section id="coin-machine" style="display: none;">
+            <h2>Interaktiver Automat</h2>
+            <p id="welcomeMessage"></p>
+            <button onclick="goToSettings()">Einstellungen</button>
         </section>
     </main>
 
@@ -167,6 +172,7 @@
             errorMessage.style.display = "none";
 
             if (email && discordName && password && profileImageInput) {
+                // Registrierung erfolgreich
                 document.getElementById("registration").style.display = "none";
                 alert("Registrierung erfolgreich! Sie können sich nun anmelden.");
                 toggleToLogin();
@@ -184,12 +190,20 @@
             errorMessage.style.display = "none";
 
             if (loginDiscordName && loginPassword) {
-                alert("Anmeldung erfolgreich!");
-                // Hier sollte der Zugriff auf den interaktiven Automaten erfolgen
+                // Anmeldung erfolgreich
+                document.getElementById("login").style.display = "none";
+                document.getElementById("coin-machine").style.display = "block";
+                document.getElementById("welcomeMessage").textContent = `Willkommen, ${loginDiscordName}! Sie haben ${coinBalance} Coins.`;
+                // Hier können weitere Funktionen des interaktiven Automaten aufgerufen werden
             } else {
                 errorMessage.textContent = "Bitte füllen Sie alle Felder aus!";
                 errorMessage.style.display = "block";
             }
+        }
+
+        function goToSettings() {
+            alert("Einstellungen werden angezeigt (funktionalität noch zu implementieren).");
+            // Hier könnte der Code für die Einstellungen hinzugefügt werden
         }
     </script>
 </body>
