@@ -65,6 +65,24 @@
             background-color: #4CAF50;
             color: white;
         }
+
+        /* Fehlermeldungen stilisieren */
+        .error-message {
+            color: red;
+            font-weight: bold;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            input[type="text"], input[type="password"], button {
+                width: 100%;
+                margin: 10px 0;
+            }
+
+            section {
+                padding: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -77,7 +95,7 @@
             <h2>Interaktiver Automat</h2>
             <input type="text" id="codeInput" maxlength="8" placeholder="Code eingeben">
             <button onclick="submitCode()">Einreichen</button>
-            <div id="message"></div>
+            <div id="message" class="error-message"></div>
         </section>
 
         <section id="price-table">
@@ -106,13 +124,14 @@
                 <h3>Admin-Panel</h3>
                 <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
                 <button onclick="addCode()">Code hinzufügen</button>
-                <div id="adminMessage"></div>
+                <div id="adminMessage" class="error-message"></div>
             </div>
         </section>
     </main>
 
     <footer>
         <p>&copy; 2024 Dual-Coin. Alle Rechte vorbehalten.</p>
+        <p><strong>Sicherheitshinweis:</strong> Bitte stelle sicher, dass diese Website sicher ist, bevor du sie öffentlich zugänglich machst.</p>
     </footer>
 
     <script>
@@ -130,8 +149,10 @@
                 coinPrice *= 1.05; // Erhöhung um 5%
                 updateUI(codeInput);
                 message.textContent = "Code erfolgreich eingereicht!";
+                message.className = ""; // Fehlerklasse zurücksetzen
             } else {
                 message.textContent = "Ungültiger Code!";
+                message.className = "error-message"; // Fehlerklasse hinzufügen
             }
 
             document.getElementById("codeInput").value = "";
@@ -165,8 +186,10 @@
             if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes.includes(newCodeInput)) {
                 codes.push(newCodeInput);
                 adminMessage.textContent = "Neuer Code erfolgreich hinzugefügt!";
+                adminMessage.className = ""; // Fehlerklasse zurücksetzen
             } else {
                 adminMessage.textContent = "Ungültiger Code!";
+                adminMessage.className = "error-message"; // Fehlerklasse hinzufügen
             }
 
             document.getElementById("newCodeInput").value = "";
