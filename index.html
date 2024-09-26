@@ -13,25 +13,51 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
+            background: linear-gradient(135deg, #f0f0f0, #d9d9d9);
         }
-        #login-panel, #server-selection, #service-selection, #krypto-panel, #admin-panel {
-            display: none;
-            border: 1px solid #ccc;
+        .container {
+            width: 90%;
+            max-width: 400px;
             padding: 20px;
             background: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3, h4 {
+            text-align: center;
+            color: #333;
+        }
+        input[type="email"], input[type="password"], input[type="text"], input[type="number"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
         }
         button {
-            margin: 5px;
-            padding: 10px 20px;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
 
-<div id="login-panel">
+<div class="container" id="login-panel">
     <h2>Bitte anmelden</h2>
     <input type="email" id="email" placeholder="E-Mail" required>
     <input type="password" id="password" placeholder="Passwort" required>
@@ -39,23 +65,23 @@
     <button onclick="showRegistration()">Registrieren</button>
 </div>
 
-<div id="server-selection">
+<div class="container hidden" id="server-selection">
     <h3>Wähle den Server, in dem du aktiv bist:</h3>
     <button onclick="selectServer('Die 7. Herrschaft')">Die 7. Herrschaft</button>
     <button onclick="selectServer('SeedMC')">SeedMC</button>
 </div>
 
-<div id="service-selection">
+<div class="container hidden" id="service-selection">
     <h3>Wähle einen Service:</h3>
     <button onclick="showKryptoPanel()">Dual-Coin | Krypto</button>
-    <button onclick="showDiscord('https://discord.gg/RAUbWkjxHS')">DuoCash | Bank</button>
-    <button onclick="showDiscord('https://discord.gg/AU3gAuE6Ut')">DualSupport | Projektunterstützung</button>
-    <button onclick="showDiscord('https://discord.gg/yFK94pbXRB')">DuoGuard | Versicherung</button>
+    <button onclick="openDiscord('https://discord.gg/RAUbWkjxHS')">DuoCash | Bank</button>
+    <button onclick="openDiscord('https://discord.gg/AU3gAuE6Ut')">DualSupport | Projektunterstützung</button>
+    <button onclick="openDiscord('https://discord.gg/yFK94pbXRB')">DuoGuard | Versicherung</button>
 </div>
 
-<div id="krypto-panel">
+<div class="container hidden" id="krypto-panel">
     <h4>Gib bitte deinen 8-stelligen Code ein:</h4>
-    <input type="text" id="code" maxlength="8">
+    <input type="text" id="code" maxlength="8" placeholder="8-stelliger Code">
     <div id="customer-list">
         <p>Kundenliste (hier Platzhalter):</p>
         <select id="customerSelect">
@@ -71,14 +97,15 @@
         <input type="text" id="adminUser" placeholder="Benutzername">
         <input type="password" id="adminPass" placeholder="Passwort">
         <button onclick="adminLogin()">Anmelden</button>
+        <button onclick="generateCode()">Code generieren</button>
     </div>
 </div>
 
 <script>
     function login() {
         // Hier sollte die Logik zur Überprüfung der Anmeldedaten stehen
-        document.getElementById('login-panel').style.display = 'none';
-        document.getElementById('server-selection').style.display = 'block';
+        document.getElementById('login-panel').classList.add('hidden');
+        document.getElementById('server-selection').classList.remove('hidden');
     }
 
     function showRegistration() {
@@ -87,34 +114,48 @@
     }
 
     function selectServer(server) {
-        document.getElementById('server-selection').style.display = 'none';
-        document.getElementById('service-selection').style.display = 'block';
+        document.getElementById('server-selection').classList.add('hidden');
+        document.getElementById('service-selection').classList.remove('hidden');
         console.log('Ausgewählter Server:', server);
     }
 
     function showKryptoPanel() {
-        document.getElementById('service-selection').style.display = 'none';
-        document.getElementById('krypto-panel').style.display = 'block';
+        document.getElementById('service-selection').classList.add('hidden');
+        document.getElementById('krypto-panel').classList.remove('hidden');
     }
 
-    function showDiscord(link) {
+    function openDiscord(link) {
         window.open(link, '_blank');
     }
 
     function sendCoins() {
-        // Logik für das Senden von DualCoins
-        alert('DualCoins gesendet!');
+        const code = document.getElementById('code').value;
+        if (code.length === 8) {
+            // Hier sollte die Logik zum Senden von DualCoins stehen
+            const customer = document.getElementById('customerSelect').value;
+            const amount = document.getElementById('amount').value;
+            alert(`DualCoins gesendet! Kunde: ${customer}, Menge: ${amount}`);
+            // Hier kann auch eine Logik zum tatsächlichen Versenden implementiert werden
+        } else {
+            alert('Bitte gib einen gültigen 8-stelligen Code ein.');
+        }
     }
 
     function adminLogin() {
         const user = document.getElementById('adminUser').value;
         const pass = document.getElementById('adminPass').value;
         if (user === 'Dualis' && pass === '28102006') {
-            alert('Admin angemeldet! Hier könnten Codes generiert werden.');
-            // Logik zur Code-Generierung oder Eingabe
+            document.getElementById('admin-panel').style.display = 'block';
+            alert('Admin angemeldet!');
+            // Hier können Admin-Funktionen aktiviert werden
         } else {
             alert('Falscher Benutzername oder Passwort.');
         }
+    }
+
+    function generateCode() {
+        // Logik zur Generierung eines Codes
+        alert('Ein neuer Code wurde generiert!');
     }
 
     // Starte die Anwendung
