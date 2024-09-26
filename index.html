@@ -135,7 +135,7 @@
     </footer>
 
     <script>
-        let codes = [];
+        let codes = []; // Liste der gültigen Codes
         let coinPrice = 10.00;
         let lastCodeTime = Date.now();
 
@@ -143,8 +143,8 @@
             const codeInput = document.getElementById("codeInput").value;
             const message = document.getElementById("message");
 
-            if (codeInput.length > 0 && codeInput.length <= 8 && !codes.includes(codeInput)) {
-                codes.push(codeInput);
+            // Überprüfen, ob der eingegebene Code in der Liste der gültigen Codes ist
+            if (codeInput.length > 0 && codeInput.length <= 8 && codes.includes(codeInput)) {
                 lastCodeTime = Date.now();
                 coinPrice *= 1.05; // Erhöhung um 5%
                 updateUI(codeInput);
@@ -184,7 +184,7 @@
             const adminMessage = document.getElementById("adminMessage");
 
             if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes.includes(newCodeInput)) {
-                codes.push(newCodeInput);
+                codes.push(newCodeInput); // Neuen Code zur Liste hinzufügen
                 adminMessage.textContent = "Neuer Code erfolgreich hinzugefügt!";
                 adminMessage.className = ""; // Fehlerklasse zurücksetzen
             } else {
