@@ -143,6 +143,8 @@
             const codeInput = document.getElementById("codeInput").value;
             const message = document.getElementById("message");
 
+            console.log("Eingegebener Code:", codeInput); // Debugging-Ausgabe
+
             // Überprüfen, ob der eingegebene Code in der Liste der gültigen Codes ist
             if (codeInput.length > 0 && codeInput.length <= 8 && codes.includes(codeInput)) {
                 lastCodeTime = Date.now();
@@ -182,6 +184,8 @@
         function addCode() {
             const newCodeInput = document.getElementById("newCodeInput").value;
             const adminMessage = document.getElementById("adminMessage");
+
+            console.log("Neuer Code:", newCodeInput); // Debugging-Ausgabe
 
             if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes.includes(newCodeInput)) {
                 codes.push(newCodeInput); // Neuen Code zur Liste hinzufügen
