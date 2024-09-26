@@ -135,6 +135,13 @@
             <p id="welcomeMessage"></p>
             <button onclick="goToSettings()">Einstellungen</button>
         </section>
+
+        <section id="settings" style="display: none;">
+            <h2>Einstellungen</h2>
+            <p>Kontostand: <span id="coinBalance">0</span> Coins</p>
+            <p>Kartennummer: <span id="cardNumber"></span></p>
+            <button onclick="toggleToCoinMachine()">Zurück zum Automaten</button>
+        </section>
     </main>
 
     <footer>
@@ -194,6 +201,7 @@
                 document.getElementById("login").style.display = "none";
                 document.getElementById("coin-machine").style.display = "block";
                 document.getElementById("welcomeMessage").textContent = `Willkommen, ${loginDiscordName}! Sie haben ${coinBalance} Coins.`;
+                document.getElementById("cardNumber").textContent = cardNumber; // Kartennummer anzeigen
                 // Hier können weitere Funktionen des interaktiven Automaten aufgerufen werden
             } else {
                 errorMessage.textContent = "Bitte füllen Sie alle Felder aus!";
@@ -202,8 +210,14 @@
         }
 
         function goToSettings() {
-            alert("Einstellungen werden angezeigt (funktionalität noch zu implementieren).");
-            // Hier könnte der Code für die Einstellungen hinzugefügt werden
+            document.getElementById("coin-machine").style.display = "none";
+            document.getElementById("settings").style.display = "block";
+            document.getElementById("coinBalance").textContent = coinBalance; // Kontostand in Einstellungen anzeigen
+        }
+
+        function toggleToCoinMachine() {
+            document.getElementById("settings").style.display = "none";
+            document.getElementById("coin-machine").style.display = "block";
         }
     </script>
 </body>
