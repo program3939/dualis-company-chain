@@ -10,7 +10,7 @@
             font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f8f9fa; /* Heller Hintergrund */
+            background-color: #f8f9fa;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -23,7 +23,7 @@
             color: white;
             text-align: center;
             padding: 20px;
-            border-radius: 10px 10px 0 0; /* Abgerundete Ecken */
+            border-radius: 10px 10px 0 0;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
             width: 100%;
             max-width: 400px;
@@ -41,7 +41,7 @@
             max-width: 400px;
             width: 100%;
             background: white;
-            border-radius: 0 0 10px 10px; /* Abgerundete Ecken */
+            border-radius: 0 0 10px 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
@@ -202,7 +202,6 @@
                 document.getElementById("coin-machine").style.display = "block";
                 document.getElementById("welcomeMessage").textContent = `Willkommen, ${loginDiscordName}! Sie haben ${coinBalance} Coins.`;
                 document.getElementById("cardNumber").textContent = cardNumber; // Kartennummer anzeigen
-                // Hier können weitere Funktionen des interaktiven Automaten aufgerufen werden
             } else {
                 errorMessage.textContent = "Bitte füllen Sie alle Felder aus!";
                 errorMessage.style.display = "block";
