@@ -31,7 +31,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        input[type="text"], input[type="password"], input[type="number"] {
+        input[type="text"], input[type="password"] {
             width: 200px;
             padding: 10px;
             margin: 10px 0;
@@ -66,15 +66,13 @@
             color: white;
         }
 
-        /* Fehlermeldungen stilisieren */
         .error-message {
             color: red;
             font-weight: bold;
         }
 
-        /* Responsive Design */
         @media (max-width: 600px) {
-            input[type="text"], input[type="password"], input[type="number"], button {
+            input[type="text"], input[type="password"], button {
                 width: 100%;
                 margin: 10px 0;
             }
@@ -91,254 +89,157 @@
     </header>
 
     <main>
-        <section id="password-section">
-            <h2>Passwort eingeben</h2>
-            <input type="password" id="initialPassword" placeholder="Passwort">
-            <button onclick="checkPassword()">Einloggen</button>
-            <div id="passwordMessage" class="error-message"></div>
+        <!-- Registrierung/Login -->
+        <section id="registration-login">
+            <h2>Registrierung / Anmeldung</h2>
+            <input type="text" id="registerUsername" placeholder="Benutzername registrieren">
+            <input type="password" id="registerPassword" placeholder="Passwort registrieren">
+            <button onclick="register()">Registrieren</button>
+
+            <h3>Login</h3>
+            <input type="text" id="loginUsername" placeholder="Benutzername eingeben">
+            <input type="password" id="loginPassword" placeholder="Passwort eingeben">
+            <button onclick="login()">Einloggen</button>
+            <div id="loginMessage" class="error-message"></div>
         </section>
 
+        <!-- Interaktiver Automat -->
         <section id="interactive-machine" style="display:none;">
             <h2>Interaktiver Automat</h2>
-            <input type="text" id="discordNameInput" placeholder="Discord-Namen eingeben">
+            <input type="text" id="discordNameInput" placeholder="Discord-Name eingeben">
             <input type="text" id="codeInput" maxlength="8" placeholder="Code eingeben">
             <button onclick="submitCode()">Einreichen</button>
             <div id="message" class="error-message"></div>
         </section>
 
-        <section id="price-table">
-            <h2>Aktueller Coin-Preis</h2>
-            <p id="coinPrice">10.00 €</p>
-            <h3>Erfasste Codes</h3>
-            <table id="codeList">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Discord Name</th>
-                        <th>Datum</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Codes werden hier dynamisch hinzugefügt -->
-                </tbody>
-            </table>
-            <h3>Leaderboard</h3>
+        <!-- Leaderboard -->
+        <section id="leaderboardSection" style="display:none;">
+            <h2>Leaderboard</h2>
             <table id="leaderboard">
                 <thead>
                     <tr>
                         <th>Discord Name</th>
-                        <th>Anzahl Coins</th>
+                        <th>Anzahl der Coins</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Leaderboard wird hier dynamisch hinzugefügt -->
+                    <!-- Namen und Coin-Anzahl werden hier dynamisch eingefügt -->
                 </tbody>
             </table>
         </section>
 
-        <section id="transfer-section" style="display:none;">
-            <h2>Coins Überweisen</h2>
-            <input type="text" id="recipientName" placeholder="Empfängername">
-            <input type="number" id="amount" placeholder="Betrag" min="1">
-            <button onclick="transferCoins()">Überweisen</button>
-            <div id="transferMessage" class="error-message"></div>
-        </section>
-
+        <!-- Admin-Bereich -->
         <section id="employee-access">
             <h2>Mitarbeiterzugang</h2>
-            <input type="text" id="username" placeholder="Benutzername">
-            <input type="password" id="password" placeholder="Passwort">
-            <button onclick="login()">Einloggen</button>
+            <input type="text" id="adminUsername" placeholder="Admin Benutzername">
+            <input type="password" id="adminPassword" placeholder="Admin Passwort">
+            <button onclick="adminLogin()">Einloggen</button>
             <div id="adminPanel" style="display:none;">
                 <h3>Admin-Panel</h3>
                 <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
                 <button onclick="addCode()">Code hinzufügen</button>
                 <div id="adminMessage" class="error-message"></div>
-                <h3>Benutzerverwaltung</h3>
-                <input type="text" id="newUserInput" placeholder="Neuen Benutzer hinzufügen">
-                <button onclick="addUser()">Benutzer hinzufügen</button>
-                <div id="userMessage" class="error-message"></div>
             </div>
         </section>
     </main>
 
     <footer>
         <p>&copy; 2024 Dual-Coin. Alle Rechte vorbehalten.</p>
-        <p><strong>Sicherheitshinweis:</strong> Bitte stelle sicher, dass diese Website sicher ist, bevor du sie öffentlich zugänglich machst.</p>
     </footer>
 
     <script>
-        let codes = []; // Liste der gültigen Codes
-        let users = {}; // Objekt zur Verwaltung der Benutzer und deren Coins
-        let coinPrice = 10.00;
-        let lastCodeTime = Date.now();
-        let isAuthenticated = false; // Flag für Authentifizierung
-        const adminCredentials = { username: "Dualis", password: "28102006" };
-        const registeredPassword = "deinPasswort"; // Registrierungspasswort
+        let users = {}; // Speicherung von Benutzernamen und Passwörtern
+        let validCodes = []; // Liste der gültigen Codes
+        let coinLedger = {}; // Speichert Discord-Namen und ihre Coins
+        let adminCredentials = { username: "Dualis", password: "28102006" };
 
-        function checkPassword() {
-            const passwordInput = document.getElementById("initialPassword").value;
-            const passwordMessage = document.getElementById("passwordMessage");
+        function register() {
+            const username = document.getElementById("registerUsername").value;
+            const password = document.getElementById("registerPassword").value;
 
-            if (passwordInput === registeredPassword) {
-                isAuthenticated = true;
-                document.getElementById("password-section").style.display = "none";
-                document.getElementById("interactive-machine").style.display = "block";
-                document.getElementById("transfer-section").style.display = "block";
+            if (username.length > 0 && password.length === 8) {
+                if (!users[username]) {
+                    users[username] = password;
+                    alert("Registrierung erfolgreich!");
+                } else {
+                    alert("Benutzername existiert bereits!");
+                }
             } else {
-                passwordMessage.textContent = "Falsches Passwort!";
-                passwordMessage.className = "error-message"; // Fehlerklasse hinzufügen
+                alert("Passwort muss genau 8 Zeichen lang sein!");
+            }
+        }
+
+        function login() {
+            const username = document.getElementById("loginUsername").value;
+            const password = document.getElementById("loginPassword").value;
+            const loginMessage = document.getElementById("loginMessage");
+
+            if (users[username] === password) {
+                document.getElementById("interactive-machine").style.display = "block";
+                document.getElementById("leaderboardSection").style.display = "block";
+                loginMessage.textContent = "";
+            } else {
+                loginMessage.textContent = "Ungültige Anmeldeinformationen!";
             }
         }
 
         function submitCode() {
-            const discordNameInput = document.getElementById("discordNameInput").value;
+            const discordName = document.getElementById("discordNameInput").value;
             const codeInput = document.getElementById("codeInput").value;
             const message = document.getElementById("message");
 
-            console.log("Eingegebener Discord-Name:", discordNameInput); // Debugging-Ausgabe
-            console.log("Eingegebener Code:", codeInput); // Debugging-Ausgabe
+            if (!coinLedger[discordName]) {
+                coinLedger[discordName] = 0; // Initialisiere mit 0 Coins
+            }
 
-            if (discordNameInput.length > 0 && codeInput.length > 0 && codeInput.length <= 8 && codes.includes(codeInput)) {
-                // Überprüfen, ob der Discord-Name existiert
-                if (!users[discordNameInput]) {
-                    message.textContent = "Ungültiger Discord-Name!";
-                    message.className = "error-message"; // Fehlerklasse hinzufügen
-                    return;
-                }
-
-                lastCodeTime = Date.now();
-                coinPrice *= 1.05; // Erhöhung um 5%
-                updateUI(codeInput, discordNameInput);
+            if (validCodes.includes(codeInput)) {
+                coinLedger[discordName] += 1; // Ein Coin hinzufügen
                 message.textContent = "Code erfolgreich eingereicht!";
-                message.className = ""; // Fehlerklasse zurücksetzen
+                message.className = "";
+                updateLeaderboard();
             } else {
                 message.textContent = "Ungültiger Code!";
-                message.className = "error-message"; // Fehlerklasse hinzufügen
+                message.className = "error-message";
             }
 
             document.getElementById("codeInput").value = "";
-            document.getElementById("discordNameInput").value = "";
-        }
-
-        function updateUI(code, discordName) {
-            const codeList = document.getElementById("codeList").getElementsByTagName('tbody')[0];
-            const newRow = codeList.insertRow();
-            newRow.insertCell(0).textContent = code;
-            newRow.insertCell(1).textContent = discordName;
-            newRow.insertCell(2).textContent = new Date().toLocaleString();
-
-            // Coins hinzufügen
-            if (!users[discordName]) {
-                users[discordName] = 1; // Erstmaliger Coin
-            } else {
-                users[discordName]++; // Coin erhöhen
-            }
-            updateLeaderboard();
-            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " €";
         }
 
         function updateLeaderboard() {
-            const leaderboard = document.getElement
             const leaderboard = document.getElementById("leaderboard").getElementsByTagName('tbody')[0];
-            leaderboard.innerHTML = ""; // Bestehende Einträge zurücksetzen
-            
-            for (const [discordName, coins] of Object.entries(users)) {
+            leaderboard.innerHTML = ""; // Reset
+
+            for (const [discordName, coins] of Object.entries(coinLedger)) {
                 const newRow = leaderboard.insertRow();
                 newRow.insertCell(0).textContent = discordName;
                 newRow.insertCell(1).textContent = coins;
             }
         }
 
-        function transferCoins() {
-            const recipientName = document.getElementById("recipientName").value;
-            const amount = parseInt(document.getElementById("amount").value);
-            const transferMessage = document.getElementById("transferMessage");
-
-            // Überprüfen, ob der Empfänger existiert
-            if (!users[recipientName]) {
-                transferMessage.textContent = "Ungültiger Empfängername!";
-                transferMessage.className = "error-message"; // Fehlerklasse hinzufügen
-                return;
-            }
-
-            // Überprüfen, ob der Benutzer genug Coins hat
-            const senderName = Object.keys(users).find(name => users[name] > 0);
-            if (!senderName || users[senderName] < amount) {
-                transferMessage.textContent = "Nicht genügend Coins!";
-                transferMessage.className = "error-message"; // Fehlerklasse hinzufügen
-                return;
-            }
-
-            // Coins übertragen
-            users[senderName] -= amount;
-            users[recipientName] += amount;
-
-            transferMessage.textContent = "Überweisung erfolgreich!";
-            transferMessage.className = ""; // Fehlerklasse zurücksetzen
-
-            // Überweisungsverlauf (hier kann man eine separate Funktion einfügen, wenn gewünscht)
-        }
-
-        function login() {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
+        function adminLogin() {
+            const username = document.getElementById("adminUsername").value;
+            const password = document.getElementById("adminPassword").value;
             const adminPanel = document.getElementById("adminPanel");
 
             if (username === adminCredentials.username && password === adminCredentials.password) {
                 adminPanel.style.display = "block";
-                alert("Erfolgreich eingeloggt!");
             } else {
                 alert("Ungültige Anmeldeinformationen!");
             }
         }
 
         function addCode() {
-            const newCodeInput = document.getElementById("newCodeInput").value;
+            const newCode = document.getElementById("newCodeInput").value;
             const adminMessage = document.getElementById("adminMessage");
 
-            console.log("Neuer Code:", newCodeInput); // Debugging-Ausgabe
-
-            if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes.includes(newCodeInput)) {
-                codes.push(newCodeInput); // Neuen Code zur Liste hinzufügen
+            if (newCode.length > 0 && newCode.length <= 8 && !validCodes.includes(newCode)) {
+                validCodes.push(newCode);
                 adminMessage.textContent = "Neuer Code erfolgreich hinzugefügt!";
-                adminMessage.className = ""; // Fehlerklasse zurücksetzen
             } else {
                 adminMessage.textContent = "Ungültiger Code!";
-                adminMessage.className = "error-message"; // Fehlerklasse hinzufügen
+                adminMessage.className = "error-message";
             }
-
-            document.getElementById("newCodeInput").value = "";
         }
-
-        function addUser() {
-            const newUserInput = document.getElementById("newUserInput").value;
-            const userMessage = document.getElementById("userMessage");
-
-            if (newUserInput.length > 0) {
-                if (!users[newUserInput]) {
-                    users[newUserInput] = 0; // Neuen Benutzer mit 0 Coins hinzufügen
-                    userMessage.textContent = "Benutzer erfolgreich hinzugefügt!";
-                    userMessage.className = ""; // Fehlerklasse zurücksetzen
-                } else {
-                    userMessage.textContent = "Benutzer existiert bereits!";
-                    userMessage.className = "error-message"; // Fehlerklasse hinzufügen
-                }
-            } else {
-                userMessage.textContent = "Ungültiger Benutzername!";
-                userMessage.className = "error-message"; // Fehlerklasse hinzufügen
-            }
-
-            document.getElementById("newUserInput").value = "";
-        }
-
-        // Preisverfall nach einer Woche
-        setInterval(() => {
-            if (Date.now() - lastCodeTime > 604800000) { // 604800000 ms = 1 Woche
-                coinPrice *= 0.8; // Senkung um 20%
-                document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " €";
-            }
-        }, 60000); // Überprüfen jede Minute
     </script>
 </body>
 </html>
