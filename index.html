@@ -160,14 +160,22 @@
             // Überprüfen, ob der eingegebene Code gültig ist
             if (codeInput.length > 0 && codeInput.length <= 8 && codes[codeInput]) {
                 lastCodeTime = Date.now(); // Code-Eingabezeit aktualisieren
+                const coinValue = codes[codeInput]; // Wert des Codes abfragen
                 coinPrice *= 1.035; // Wert des Coins um 3.5% erhöhen
+
+                // Coins für den Benutzer hinzufügen
                 if (users[discordInput]) {
-                    users[discordInput]++; // Falls Discord-Name schon existiert, Coins erhöhen
+                    users[discordInput] += coinValue; // Falls Discord-Name schon existiert, Coins erhöhen
                 } else {
-                    users[discordInput] = 1; // Falls neuer Discord-Name, 1 Coin setzen
+                    users[discordInput] = coinValue; // Falls neuer Discord-Name, Coin-Wert setzen
                 }
 
-                updateUI(discordInput, codeInput); // UI aktualisieren
+                // Daten speichern
+                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem('coinPrice', coinPrice);
+                localStorage.setItem('lastCodeTime', lastCodeTime);
+
+                updateUI(); // UI aktualisieren
                 message.textContent = "Code erfolgreich eingereicht!";
                 message.className = ""; // Fehlerklasse zurücksetzen
             } else {
@@ -178,15 +186,9 @@
             // Felder leeren
             document.getElementById("codeInput").value = "";
             document.getElementById("discordInput").value = "";
-
-            // Daten in LocalStorage speichern
-            localStorage.setItem('codes', JSON.stringify(codes));
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('coinPrice', coinPrice);
-            localStorage.setItem('lastCodeTime', lastCodeTime);
         }
 
-        function updateUI(discordName, code) {
+        function updateUI() {
             // Aktualisiere das Leaderboard
             const leaderboard = document.getElementById("leaderboard").getElementsByTagName('tbody')[0];
             leaderboard.innerHTML = ""; // Tabelle leeren
@@ -199,12 +201,6 @@
 
             // Aktualisiere den Coin-Preis
             document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
-
-            // Füge den eingetragenen Code zur Tabelle der erfassten Codes hinzu
-            const codeList = document.getElementById("codeList").getElementsByTagName('tbody')[0];
-            const newRow = codeList.insertRow();
-            newRow.insertCell(0).textContent = code;
-            newRow.insertCell(1).textContent = new Date().toLocaleString();
         }
 
         function login() {
@@ -230,28 +226,24 @@
                 codes[newCodeInput] = coinValue; // Neuen Code und seinen Wert zur Liste hinzufügen
                 adminMessage.textContent = "Neuer Code erfolgreich hinzugefügt!";
                 adminMessage.className = ""; // Fehlerklasse zurücksetzen
-                updateAdminPanel(); // Admin-Panel updaten
+            adminMessage.className = ""; // Fehlerklasse zurücksetzen
             } else {
-                adminMessage.textContent = "Ungültiger Code oder Coin-Wert!";
+                adminMessage.textContent = "Ungültiger Code oder dieser Code existiert bereits!";
                 adminMessage.className = "error-message"; // Fehlerklasse hinzufügen
             }
 
-            // Eingabefelder leeren
-            document.getElementById("newCodeInput").value
-// Eingabefelder leeren
+            // Felder leeren
             document.getElementById("newCodeInput").value = "";
             document.getElementById("coinValue").value = "";
 
-            // Daten im LocalStorage speichern
-            localStorage.setItem('codes', JSON.stringify(codes));
+            // Aktualisiere die aktiven Codes im Admin-Panel
+            updateAdminPanel();
         }
 
-        // Funktion zur Aktualisierung des Admin-Panels
         function updateAdminPanel() {
             const activeCodesTable = document.getElementById("activeCodes").getElementsByTagName('tbody')[0];
             activeCodesTable.innerHTML = ""; // Tabelle leeren
 
-            // Aktive Codes zur Tabelle hinzufügen
             for (const [code, value] of Object.entries(codes)) {
                 const newRow = activeCodesTable.insertRow();
                 newRow.insertCell(0).textContent = code;
@@ -259,45 +251,11 @@
             }
         }
 
-        // Funktion zur Preisaktualisierung
-        function updateCoinPrice() {
-            const currentTime = Date.now();
-            const timeElapsed = currentTime - lastCodeTime;
-
-            // Überprüfen, ob eine Woche seit dem letzten Code vergangen ist
-            if (timeElapsed > 7 * 24 * 60 * 60 * 1000) {
-                coinPrice *= 0.98; // Preis um 2% senken
-                lastCodeTime = currentTime; // Zeit zurücksetzen
-            }
-
-            // Überprüfen, ob ein Monat vergangen ist
-            if (timeElapsed > 30 * 24 * 60 * 60 * 1000) {
-                coinPrice *= 0.94; // Preis um 6% senken
-                lastCodeTime = currentTime; // Zeit zurücksetzen
-            }
-
-            // Preis im LocalStorage speichern
-            localStorage.setItem('coinPrice', coinPrice);
-            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $"; // Preis aktualisieren
-        }
-
-        // Funktion zur Initialisierung der Seite
-        function init() {
-            updateCoinPrice(); // Preis beim Laden aktualisieren
-            updateAdminPanel(); // Admin-Panel beim Laden aktualisieren
-            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $"; // Setze den initialen Preis
-        }
-
-        // Starte die Initialisierung
-        init();
-
-        // Überwacht, wenn der Benutzer die Seite verlässt
-        window.addEventListener("beforeunload", () => {
-            // Aktuelle Zeit speichern, wenn der Benutzer die Seite verlässt
-            localStorage.setItem('lastCodeTime', lastCodeTime);
-        });
-
+        // Initialisiere die UI beim Laden der Seite
+        window.onload = function() {
+            updateUI(); // UI aktualisieren
+            updateAdminPanel(); // Admin-Panel aktualisieren
+        };
     </script>
 </body>
 </html>
-
