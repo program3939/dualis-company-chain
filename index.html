@@ -31,7 +31,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        input[type="text"], input[type="password"] {
+        input[type="text"] {
             width: 200px;
             padding: 10px;
             margin: 10px 0;
@@ -66,13 +66,15 @@
             color: white;
         }
 
+        /* Fehlermeldungen stilisieren */
         .error-message {
             color: red;
             font-weight: bold;
         }
 
+        /* Responsive Design */
         @media (max-width: 600px) {
-            input[type="text"], input[type="password"], button {
+            input[type="text"], button {
                 width: 100%;
                 margin: 10px 0;
             }
@@ -89,157 +91,123 @@
     </header>
 
     <main>
-        <!-- Registrierung/Login -->
-        <section id="registration-login">
-            <h2>Registrierung / Anmeldung</h2>
-            <input type="text" id="registerUsername" placeholder="Benutzername registrieren">
-            <input type="password" id="registerPassword" placeholder="Passwort registrieren">
-            <button onclick="register()">Registrieren</button>
-
-            <h3>Login</h3>
-            <input type="text" id="loginUsername" placeholder="Benutzername eingeben">
-            <input type="password" id="loginPassword" placeholder="Passwort eingeben">
-            <button onclick="login()">Einloggen</button>
-            <div id="loginMessage" class="error-message"></div>
-        </section>
-
-        <!-- Interaktiver Automat -->
-        <section id="interactive-machine" style="display:none;">
+        <section id="interactive-machine">
             <h2>Interaktiver Automat</h2>
-            <input type="text" id="discordNameInput" placeholder="Discord-Name eingeben">
+            <input type="text" id="discordNameInput" placeholder="Discord Name eingeben">
             <input type="text" id="codeInput" maxlength="8" placeholder="Code eingeben">
             <button onclick="submitCode()">Einreichen</button>
             <div id="message" class="error-message"></div>
         </section>
 
-        <!-- Leaderboard -->
-        <section id="leaderboardSection" style="display:none;">
+        <section id="leaderboard">
             <h2>Leaderboard</h2>
-            <table id="leaderboard">
+            <table>
                 <thead>
                     <tr>
                         <th>Discord Name</th>
-                        <th>Anzahl der Coins</th>
+                        <th>Coins</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <!-- Namen und Coin-Anzahl werden hier dynamisch eingefügt -->
+                <tbody id="leaderboardList">
+                    <!-- Leaderboard-Einträge werden hier dynamisch hinzugefügt -->
                 </tbody>
             </table>
         </section>
 
-        <!-- Admin-Bereich -->
-        <section id="employee-access">
-            <h2>Mitarbeiterzugang</h2>
-            <input type="text" id="adminUsername" placeholder="Admin Benutzername">
-            <input type="password" id="adminPassword" placeholder="Admin Passwort">
-            <button onclick="adminLogin()">Einloggen</button>
-            <div id="adminPanel" style="display:none;">
-                <h3>Admin-Panel</h3>
-                <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
-                <button onclick="addCode()">Code hinzufügen</button>
-                <div id="adminMessage" class="error-message"></div>
-            </div>
+        <section id="admin-access">
+            <h2>Admin-Panel</h2>
+            <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
+            <input type="number" id="coinValue" placeholder="Wert in Coins">
+            <button onclick="addCode()">Code hinzufügen</button>
+            <div id="adminMessage" class="error-message"></div>
         </section>
     </main>
 
     <footer>
         <p>&copy; 2024 Dual-Coin. Alle Rechte vorbehalten.</p>
+        <p><strong>Sicherheitshinweis:</strong> Bitte stelle sicher, dass diese Website sicher ist, bevor du sie öffentlich zugänglich machst.</p>
     </footer>
 
     <script>
-        let users = {}; // Speicherung von Benutzernamen und Passwörtern
-        let validCodes = []; // Liste der gültigen Codes
-        let coinLedger = {}; // Speichert Discord-Namen und ihre Coins
-        let adminCredentials = { username: "Dualis", password: "28102006" };
-
-        function register() {
-            const username = document.getElementById("registerUsername").value;
-            const password = document.getElementById("registerPassword").value;
-
-            if (username.length > 0 && password.length === 8) {
-                if (!users[username]) {
-                    users[username] = password;
-                    alert("Registrierung erfolgreich!");
-                } else {
-                    alert("Benutzername existiert bereits!");
-                }
-            } else {
-                alert("Passwort muss genau 8 Zeichen lang sein!");
-            }
-        }
-
-        function login() {
-            const username = document.getElementById("loginUsername").value;
-            const password = document.getElementById("loginPassword").value;
-            const loginMessage = document.getElementById("loginMessage");
-
-            if (users[username] === password) {
-                document.getElementById("interactive-machine").style.display = "block";
-                document.getElementById("leaderboardSection").style.display = "block";
-                loginMessage.textContent = "";
-            } else {
-                loginMessage.textContent = "Ungültige Anmeldeinformationen!";
-            }
-        }
+        let codes = {}; // Key: Code, Value: Coins
+        let users = {}; // Key: Discord Name, Value: Coins
+        let coinPrice = 10.00;
+        let lastCodeTime = Date.now();
 
         function submitCode() {
             const discordName = document.getElementById("discordNameInput").value;
             const codeInput = document.getElementById("codeInput").value;
             const message = document.getElementById("message");
 
-            if (!coinLedger[discordName]) {
-                coinLedger[discordName] = 0; // Initialisiere mit 0 Coins
-            }
+            // Überprüfen, ob der Discord-Name und der Code valide sind
+            if (discordName && codeInput && codes[codeInput]) {
+                lastCodeTime = Date.now();
+                const coinValue = codes[codeInput];
 
-            if (validCodes.includes(codeInput)) {
-                coinLedger[discordName] += 1; // Ein Coin hinzufügen
+                // Fügt Coins zum User hinzu
+                if (users[discordName]) {
+                    users[discordName] += coinValue;
+                } else {
+                    users[discordName] = coinValue;
+                }
+
+                coinPrice *= 1.035; // Wert um 3,5% erhöhen
+                updateUI(discordName, coinValue);
                 message.textContent = "Code erfolgreich eingereicht!";
-                message.className = "";
-                updateLeaderboard();
+                message.className = ""; // Fehlerklasse zurücksetzen
             } else {
-                message.textContent = "Ungültiger Code!";
-                message.className = "error-message";
+                message.textContent = "Ungültiger Code oder Discord Name!";
+                message.className = "error-message"; // Fehlerklasse hinzufügen
             }
 
             document.getElementById("codeInput").value = "";
+            document.getElementById("discordNameInput").value = "";
         }
 
-        function updateLeaderboard() {
-            const leaderboard = document.getElementById("leaderboard").getElementsByTagName('tbody')[0];
-            leaderboard.innerHTML = ""; // Reset
+        function updateUI(discordName, coinValue) {
+            const leaderboardList = document.getElementById("leaderboardList");
 
-            for (const [discordName, coins] of Object.entries(coinLedger)) {
-                const newRow = leaderboard.insertRow();
-                newRow.insertCell(0).textContent = discordName;
-                newRow.insertCell(1).textContent = coins;
-            }
-        }
-
-        function adminLogin() {
-            const username = document.getElementById("adminUsername").value;
-            const password = document.getElementById("adminPassword").value;
-            const adminPanel = document.getElementById("adminPanel");
-
-            if (username === adminCredentials.username && password === adminCredentials.password) {
-                adminPanel.style.display = "block";
-            } else {
-                alert("Ungültige Anmeldeinformationen!");
+            // Leaderboard aktualisieren
+            leaderboardList.innerHTML = "";
+            for (const user in users) {
+                const row = leaderboardList.insertRow();
+                row.insertCell(0).textContent = user;
+                row.insertCell(1).textContent = users[user];
             }
         }
 
         function addCode() {
-            const newCode = document.getElementById("newCodeInput").value;
+            const newCodeInput = document.getElementById("newCodeInput").value;
+            const coinValue = parseFloat(document.getElementById("coinValue").value);
             const adminMessage = document.getElementById("adminMessage");
 
-            if (newCode.length > 0 && newCode.length <= 8 && !validCodes.includes(newCode)) {
-                validCodes.push(newCode);
+            if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes[newCodeInput] && coinValue > 0) {
+                codes[newCodeInput] = coinValue; // Neuen Code und seinen Wert zur Liste hinzufügen
                 adminMessage.textContent = "Neuer Code erfolgreich hinzugefügt!";
+                adminMessage.className = ""; // Fehlerklasse zurücksetzen
             } else {
-                adminMessage.textContent = "Ungültiger Code!";
-                adminMessage.className = "error-message";
+                adminMessage.textContent = "Ungültiger Code oder Coin-Wert!";
+                adminMessage.className = "error-message"; // Fehlerklasse hinzufügen
             }
+
+            document.getElementById("newCodeInput").value = "";
+            document.getElementById("coinValue").value = "";
         }
+
+        // Coin-Wert-Senkung Mechanik
+        setInterval(() => {
+            const currentTime = Date.now();
+            const oneWeek = 604800000; // Eine Woche in ms
+            const oneMonth = 2629800000; // Ein Monat in ms
+
+            if (currentTime - lastCodeTime > oneMonth) {
+                coinPrice *= 0.94; // Wert um 6% senken, wenn 1 Monat lang kein Code eingetragen wurde
+            } else if (currentTime - lastCodeTime > oneWeek) {
+                coinPrice *= 0.98; // Wert um 2% senken, wenn 1 Woche lang kein Code eingetragen wurde
+            }
+
+            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " €";
+        }, 60000); // Überprüfung alle 60 Sekunden
     </script>
 </body>
 </html>
