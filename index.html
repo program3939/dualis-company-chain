@@ -138,6 +138,7 @@
                         <!-- Aktive Codes werden hier angezeigt -->
                     </tbody>
                 </table>
+                <button onclick="resetAll()">Alle zurücksetzen</button>
             </div>
         </section>
     </main>
@@ -157,27 +158,28 @@
             const discordInput = document.getElementById("discordInput").value;
             const message = document.getElementById("message");
 
-            // Überprüfen, ob der eingegebene Code gültig ist
+            // Überprüfen, ob der eingegebene Code gültig ist und nur einmalig verwendet werden kann
             if (codeInput.length > 0 && codeInput.length <= 8 && codes[codeInput]) {
+                const coinValue = codes[codeInput]; // Wert des Codes abrufen
                 lastCodeTime = Date.now(); // Code-Eingabezeit aktualisieren
-                const coinValue = codes[codeInput]; // Wert des Codes abfragen
-                coinPrice *= 1.035; // Wert des Coins um 3.5% erhöhen
 
-                // Coins für den Benutzer hinzufügen
+                // Erhöhe den Coin-Wert um 2% pro Code-Wert
+                coinPrice *= 1 + (0.02 * coinValue);
+
+                // Nutzer-Statistik aktualisieren
                 if (users[discordInput]) {
-                    users[discordInput] += coinValue; // Falls Discord-Name schon existiert, Coins erhöhen
+                    users[discordInput]++; // Falls Discord-Name schon existiert, Coins erhöhen
                 } else {
-                    users[discordInput] = coinValue; // Falls neuer Discord-Name, Coin-Wert setzen
+                    users[discordInput] = 1; // Falls neuer Discord-Name, 1 Coin setzen
                 }
 
-                // Daten speichern
-                localStorage.setItem('users', JSON.stringify(users));
-                localStorage.setItem('coinPrice', coinPrice);
-                localStorage.setItem('lastCodeTime', lastCodeTime);
-
-                updateUI(); // UI aktualisieren
+                updateUI(discordInput, codeInput); // UI aktualisieren
                 message.textContent = "Code erfolgreich eingereicht!";
                 message.className = ""; // Fehlerklasse zurücksetzen
+
+                // Code entfernen, um Mehrfacheinlösungen zu verhindern
+                delete codes[codeInput];
+
             } else {
                 message.textContent = "Ungültiger Code oder Discord-Name!";
                 message.className = "error-message"; // Fehlerklasse hinzufügen
@@ -186,9 +188,15 @@
             // Felder leeren
             document.getElementById("codeInput").value = "";
             document.getElementById("discordInput").value = "";
+
+            // Daten in LocalStorage speichern
+            localStorage.setItem('codes', JSON.stringify(codes));
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('coinPrice', coinPrice);
+            localStorage.setItem('lastCodeTime', lastCodeTime);
         }
 
-        function updateUI() {
+        function updateUI(discordName, code) {
             // Aktualisiere das Leaderboard
             const leaderboard = document.getElementById("leaderboard").getElementsByTagName('tbody')[0];
             leaderboard.innerHTML = ""; // Tabelle leeren
@@ -226,18 +234,18 @@
                 codes[newCodeInput] = coinValue; // Neuen Code und seinen Wert zur Liste hinzufügen
                 adminMessage.textContent = "Neuer Code erfolgreich hinzugefügt!";
                 adminMessage.className = ""; // Fehlerklasse zurücksetzen
-            adminMessage.className = ""; // Fehlerklasse zurücksetzen
+                updateAdminPanel(); // Admin-Panel updaten
             } else {
-                adminMessage.textContent = "Ungültiger Code oder dieser Code existiert bereits!";
+                adminMessage.textContent = "Ungültiger Code oder Coin-Wert!";
                 adminMessage.className = "error-message"; // Fehlerklasse hinzufügen
             }
 
-            // Felder leeren
+            // Eingabefelder leeren
             document.getElementById("newCodeInput").value = "";
             document.getElementById("coinValue").value = "";
-
-            // Aktualisiere die aktiven Codes im Admin-Panel
-            updateAdminPanel();
+            
+            // Daten in LocalStorage speichern
+            localStorage.setItem('codes', JSON.stringify(codes));
         }
 
         function updateAdminPanel() {
@@ -251,10 +259,26 @@
             }
         }
 
-        // Initialisiere die UI beim Laden der Seite
+        function resetAll() {
+            if (confirm("Sind Sie sicher, dass Sie alle Daten zurücksetzen möchten?")) {
+                codes = {}; // Codes zurücksetzen
+                users = {}; // Benutzer zurücksetzen
+                coinPrice = 10.00; // Preis zurücksetzen
+                localStorage.removeItem('codes'); // Codes aus LocalStorage entfernen
+                localStorage.removeItem('users'); // Benutzer aus LocalStorage entfernen
+                localStorage.removeItem('coinPrice'); // Preis aus LocalStorage entfernen
+                localStorage.removeItem('lastCodeTime'); // Letzte Code-Zeit zurücksetzen
+
+                updateUI(); // UI aktualisieren
+                updateAdminPanel(); // Admin-Panel aktualisieren
+            }
+        }
+
+        // Initialisierung beim Laden der Seite
         window.onload = function() {
-            updateUI(); // UI aktualisieren
-            updateAdminPanel(); // Admin-Panel aktualisieren
+            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
+            updateAdminPanel(); // Admin-Panel initialisieren
+            updateUI(); // UI initialisieren
         };
     </script>
 </body>
