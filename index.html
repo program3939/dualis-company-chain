@@ -104,7 +104,7 @@
                 <thead>
                     <tr>
                         <th>Discord-Name</th>
-                        <th>Coins</th>
+                        <th>Coins</th> <!-- Titel bleibt erhalten -->
                     </tr>
                 </thead>
                 <tbody>
@@ -168,9 +168,9 @@
 
                 // Nutzer-Statistik aktualisieren
                 if (users[discordInput]) {
-                    users[discordInput]++; // Falls Discord-Name schon existiert, Coins erhöhen
+                    users[discordInput] += coinValue; // Coins erhöhen, wenn Discord-Name schon existiert
                 } else {
-                    users[discordInput] = 1; // Falls neuer Discord-Name, 1 Coin setzen
+                    users[discordInput] = coinValue; // Falls neuer Discord-Name, Coin-Wert setzen
                 }
 
                 updateUI(discordInput, codeInput); // UI aktualisieren
@@ -204,7 +204,7 @@
             for (const [name, coins] of Object.entries(users)) {
                 const newRow = leaderboard.insertRow();
                 newRow.insertCell(0).textContent = name;
-                newRow.insertCell(1).textContent = coins;
+                newRow.insertCell(1).textContent = coins; // Coin-Wert im Leaderboard anzeigen
             }
 
             // Aktualisiere den Coin-Preis
@@ -243,7 +243,7 @@
             // Eingabefelder leeren
             document.getElementById("newCodeInput").value = "";
             document.getElementById("coinValue").value = "";
-            
+
             // Daten in LocalStorage speichern
             localStorage.setItem('codes', JSON.stringify(codes));
         }
@@ -255,31 +255,29 @@
             for (const [code, value] of Object.entries(codes)) {
                 const newRow = activeCodesTable.insertRow();
                 newRow.insertCell(0).textContent = code;
-                newRow.insertCell(1).textContent = value;
+                newRow.insertCell(1).textContent = value; // Coin-Wert des Codes anzeigen
             }
         }
 
         function resetAll() {
-            if (confirm("Sind Sie sicher, dass Sie alle Daten zurücksetzen möchten?")) {
+            if (confirm("Bist du sicher, dass du alle Daten zurücksetzen möchtest?")) {
                 codes = {}; // Codes zurücksetzen
-                users = {}; // Benutzer zurücksetzen
-                coinPrice = 10.00; // Preis zurücksetzen
+                users = {}; // Nutzer zurücksetzen
+                coinPrice = 10.00; // Preis auf Standard zurücksetzen
                 localStorage.removeItem('codes'); // Codes aus LocalStorage entfernen
-                localStorage.removeItem('users'); // Benutzer aus LocalStorage entfernen
-                localStorage.removeItem('coinPrice'); // Preis aus LocalStorage entfernen
-                localStorage.removeItem('lastCodeTime'); // Letzte Code-Zeit zurücksetzen
-
+                localStorage.removeItem('users'); // Nutzer aus LocalStorage entfernen
+                localStorage.setItem('coinPrice', coinPrice); // Preis zurücksetzen
                 updateUI(); // UI aktualisieren
                 updateAdminPanel(); // Admin-Panel aktualisieren
             }
         }
 
-        // Initialisierung beim Laden der Seite
-        window.onload = function() {
-            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
-            updateAdminPanel(); // Admin-Panel initialisieren
-            updateUI(); // UI initialisieren
-        };
+        // UI beim Laden der Seite initialisieren
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI(); // UI mit gespeicherten Daten aktualisieren
+            updateAdminPanel(); // Admin-Panel mit gespeicherten Codes aktualisieren
+            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $"; // Preis anzeigen
+        });
     </script>
 </body>
 </html>
