@@ -99,6 +99,11 @@
             <div id="message" class="error-message"></div>
         </section>
 
+        <!-- Spalte mit aktuellem Preis -->
+        <section id="coin-price">
+            <h2>Aktueller Coin-Preis: <span id="coinPrice">10.00 $</span></h2>
+        </section>
+
         <section id="leaderboard">
             <h2>Leaderboard</h2>
             <table>
@@ -190,6 +195,10 @@
 
         function updateUI() {
             const leaderboardList = document.getElementById("leaderboardList");
+            const priceElement = document.getElementById("coinPrice");
+
+            // Coin-Preis aktualisieren
+            priceElement.textContent = coinPrice.toFixed(2) + " $";
 
             // Leaderboard aktualisieren
             leaderboardList.innerHTML = "";
@@ -230,7 +239,7 @@
                 coinPrice *= 0.98; // Wert um 2% senken, wenn 1 Woche lang kein Code eingetragen wurde
             }
 
-            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " €";
+            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
         }, 60000); // Überprüfung alle 60 Sekunden
     </script>
 </body>
