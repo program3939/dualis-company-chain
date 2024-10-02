@@ -1,88 +1,78 @@
-/* Grundlegendes Styling */
+/* styles.css */
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: Arial, sans-serif;
     margin: 0;
-    padding: 20px;
-    background-color: #e9ecef;
-    color: #343a40;
+    padding: 0;
+    background-color: #f0f0f0; /* Helles Hintergrundfarbe */
 }
 
 header {
-    text-align: center;
-    background-color: #007bff;
+    background-color: #4CAF50; /* Grüner Header */
     color: white;
-    padding: 20px 0;
-    border-radius: 8px;
+    padding: 10px 20px;
+    text-align: center;
 }
 
-h1, h2 {
-    margin: 0;
+main {
+    padding: 20px;
 }
 
 section {
-    margin: 20px 0;
+    margin-bottom: 20px;
     padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-input[type="text"], input[type="password"], input[type="number"] {
+h2 {
+    color: #4CAF50; /* Grüne Überschrift */
+}
+
+input[type="text"],
+input[type="password"],
+input[type="number"] {
     width: 100%;
-    max-width: 300px;
     padding: 10px;
     margin: 10px 0;
-    border: 1px solid #ced4da;
+    border: 1px solid #ccc;
     border-radius: 5px;
 }
 
 button {
-    padding: 10px 20px;
-    background-color: #007bff;
+    background-color: #4CAF50; /* Grüner Button */
     color: white;
+    padding: 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    width: 100%;
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #45a049; /* Dunklerer Grüner Button */
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
 }
 
 th, td {
-    border: 1px solid #ced4da;
+    border: 1px solid #ccc;
+    padding: 10px;
     text-align: left;
-    padding: 8px;
 }
 
 th {
-    background-color: #007bff;
+    background-color: #4CAF50; /* Grüner Tabellenkopf */
     color: white;
 }
 
 .error-message {
     color: red;
-    font-weight: bold;
 }
 
 .success-message {
     color: green;
-    font-weight: bold;
-}
-
-@media (max-width: 600px) {
-    input[type="text"], input[type="password"], button {
-        width: 100%;
-    }
-
-    section {
-        padding: 15px;
-    }
 }
