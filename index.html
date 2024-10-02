@@ -55,7 +55,7 @@
             margin-bottom: 10px;
         }
 
-        input[type="text"], input[type="password"], input[type="number"] {
+        input[type="text"], input[type="number"], input[type="password"] {
             width: calc(100% - 20px);
             padding: 15px;
             font-size: 1.1em;
@@ -157,7 +157,7 @@
                 font-size: 1em;
             }
 
-            input[type="text"], input[type="password"], input[type="number"] {
+            input[type="text"], input[type="number"], input[type="password"] {
                 font-size: 1em;
             }
 
@@ -222,7 +222,7 @@
                     <input type="checkbox" id="multiUseCheckbox"> Mehrfach verwendbaren Code erstellen
                 </label>
                 <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code (oder leer lassen)">
-                <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)">
+                <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)" min="1">
                 <button onclick="generateCode()">Code generieren</button>
             </div>
             <h4>Aktive Codes:</h4>
@@ -273,7 +273,7 @@
             loadLeaderboard();
         } else {
             loginMessage.style.display = 'block';
-            loginMessage.innerText = 'Falscher Benutzername oder Passwort.';
+            loginMessage.innerText = 'Ungültiger Benutzername oder Passwort!';
         }
     }
 
@@ -440,9 +440,9 @@
     }
 
     function animatePriceChange(element, targetPrice) {
-        let currentPrice = 0;
+        let currentPrice = parseFloat(element.innerText.replace('$', '').trim());
         const duration = 5000; // 5 Sekunden
-        const stepTime = duration / targetPrice;
+        const stepTime = duration / (targetPrice - currentPrice);
 
         const interval = setInterval(() => {
             if (currentPrice < targetPrice) {
