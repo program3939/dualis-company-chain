@@ -214,15 +214,17 @@
             <input type="number" id="newCoinPrice" placeholder="Neuer Preis" step="0.01">
             <button onclick="changeCoinPrice()">Preis ändern</button>
             <h4>Neuen Code generieren:</h4>
-            <label>
-                <input type="checkbox" id="randomCodeCheckbox"> Zufälligen 8-stelligen Code generieren
-            </label>
-            <label>
-                <input type="checkbox" id="multiUseCheckbox"> Mehrfach verwendbaren Code erstellen
-            </label>
-            <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code (oder leer lassen)">
-            <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)">
-            <button onclick="generateCode()">Code generieren</button>
+            <div style="margin-top: 15px;">
+                <label>
+                    <input type="checkbox" id="randomCodeCheckbox"> Zufälligen 8-stelligen Code generieren
+                </label>
+                <label>
+                    <input type="checkbox" id="multiUseCheckbox"> Mehrfach verwendbaren Code erstellen
+                </label>
+                <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code (oder leer lassen)">
+                <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)">
+                <button onclick="generateCode()">Code generieren</button>
+            </div>
             <h4>Aktive Codes:</h4>
             <table id="activeCodes">
                 <thead>
