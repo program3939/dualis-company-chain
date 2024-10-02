@@ -71,6 +71,11 @@
             font-weight: bold;
         }
 
+        .message {
+            color: green;
+            font-weight: bold;
+        }
+
         @media (max-width: 600px) {
             input[type="text"], input[type="password"], button {
                 width: 100%;
@@ -113,6 +118,26 @@
             </table>
         </section>
 
+        <section id="transfer-system">
+            <h2>Überweisungssystem</h2>
+            <form id="transferForm">
+                <label for="recipientName">Empfängername:</label>
+                <input type="text" id="recipientName" placeholder="Empfängername" required>
+
+                <label for="iban">IBAN:</label>
+                <input type="text" id="iban" placeholder="IBAN" required>
+
+                <label for="amount">Betrag (in Euro):</label>
+                <input type="number" id="amount" placeholder="Betrag" required min="1">
+
+                <label for="message">Verwendungszweck:</label>
+                <input type="text" id="message" placeholder="Verwendungszweck">
+
+                <button type="button" onclick="submitTransfer()">Überweisen</button>
+                <p id="transferFeedback" class="message"></p>
+            </form>
+        </section>
+
         <section id="admin-access">
             <h2>Mitarbeiterzugang</h2>
             <input type="text" id="adminUsername" placeholder="Benutzername">
@@ -148,136 +173,43 @@
     </footer>
 
     <script>
-        let codes = JSON.parse(localStorage.getItem('codes')) || {}; // Codes aus dem LocalStorage laden oder leere Liste
-        let users = JSON.parse(localStorage.getItem('users')) || {}; // Nutzer-Daten aus LocalStorage laden
-        let coinPrice = parseFloat(localStorage.getItem('coinPrice')) || 10.00; // Standardpreis ist 10.00 $, falls nicht gespeichert
-        let lastCodeTime = parseInt(localStorage.getItem('lastCodeTime')) || Date.now(); // Letzte Code-Zeit aus LocalStorage oder aktuelles Datum
+        // Existierende Dual-Coin-Funktionen
 
-        function submitCode() {
-            const codeInput = document.getElementById("codeInput").value;
-            const discordInput = document.getElementById("discordInput").value;
-            const message = document.getElementById("message");
+        // Funktionen für das Überweisungssystem
+        function submitTransfer() {
+            const recipientName = document.getElementById('recipientName').value;
+            const iban = document.getElementById('iban').value;
+            const amount = document.getElementById('amount').value;
+            const transferMessage = document.getElementById('message').value;
+            const feedback = document.getElementById('transferFeedback');
 
-            // Überprüfen, ob der eingegebene Code gültig ist und nur einmalig verwendet werden kann
-            if (codeInput.length > 0 && codeInput.length <= 8 && codes[codeInput]) {
-                const coinValue = codes[codeInput]; // Wert des Codes abrufen
-                lastCodeTime = Date.now(); // Code-Eingabezeit aktualisieren
-
-                // Erhöhe den Coin-Wert um 2% pro Code-Wert
-                coinPrice *= 1 + (0.02 * coinValue);
-
-                // Nutzer-Statistik aktualisieren
-                if (users[discordInput]) {
-                    users[discordInput] += coinValue; // Coins erhöhen, wenn Discord-Name schon existiert
-                } else {
-                    users[discordInput] = coinValue; // Falls neuer Discord-Name, Coin-Wert setzen
-                }
-
-                updateUI(discordInput, codeInput); // UI aktualisieren
-                message.textContent = "Code erfolgreich eingereicht!";
-                message.className = ""; // Fehlerklasse zurücksetzen
-
-                // Code entfernen, um Mehrfacheinlösungen zu verhindern
-                delete codes[codeInput];
-
-            } else {
-                message.textContent = "Ungültiger Code oder Discord-Name!";
-                message.className = "error-message"; // Fehlerklasse hinzufügen
+            if (!recipientName || !iban || amount <= 0) {
+                feedback.textContent = "Bitte alle Felder korrekt ausfüllen.";
+                feedback.className = "error-message";
+                return;
             }
+
+            feedback.textContent = "Überweisung erfolgreich durchgeführt!";
+            feedback.className = "message";
+
+            // Überweisungsdaten simuliert verarbeiten
+            const transferData = {
+                recipientName: recipientName,
+                iban: iban,
+                amount: parseFloat(amount),
+                message: transferMessage
+            };
+
+            // Hier könnte ein echter Backend-Aufruf gemacht werden, z.B.:
+            // fetch('/api/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(transferData) });
+            console.log("Überweisung gesendet: ", transferData);
 
             // Felder leeren
-            document.getElementById("codeInput").value = "";
-            document.getElementById("discordInput").value = "";
-
-            // Daten in LocalStorage speichern
-            localStorage.setItem('codes', JSON.stringify(codes));
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('coinPrice', coinPrice);
-            localStorage.setItem('lastCodeTime', lastCodeTime);
+            document.getElementById('recipientName').value = '';
+            document.getElementById('iban').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('message').value = '';
         }
-
-        function updateUI(discordName, code) {
-            // Aktualisiere das Leaderboard
-            const leaderboard = document.getElementById("leaderboard").getElementsByTagName('tbody')[0];
-            leaderboard.innerHTML = ""; // Tabelle leeren
-
-            for (const [name, coins] of Object.entries(users)) {
-                const newRow = leaderboard.insertRow();
-                newRow.insertCell(0).textContent = name;
-                newRow.insertCell(1).textContent = coins; // Coin-Wert im Leaderboard anzeigen
-            }
-
-            // Aktualisiere den Coin-Preis
-            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
-        }
-
-        function login() {
-            const username = document.getElementById("adminUsername").value;
-            const password = document.getElementById("adminPassword").value;
-            const adminPanel = document.getElementById("adminPanel");
-
-            if (username === "Dualis" && password === "28102006") {
-                adminPanel.style.display = "block";
-                updateAdminPanel(); // Admin-Panel aktualisieren
-            } else {
-                alert("Ungültige Anmeldeinformationen!");
-            }
-        }
-
-        // Funktion zum Hinzufügen neuer Codes im Admin-Panel
-        function addCode() {
-            const newCodeInput = document.getElementById("newCodeInput").value;
-            const coinValue = parseFloat(document.getElementById("coinValue").value);
-            const adminMessage = document.getElementById("adminMessage");
-
-            if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes[newCodeInput] && coinValue > 0) {
-                codes[newCodeInput] = coinValue; // Neuen Code und seinen Wert zur Liste hinzufügen
-                adminMessage.textContent = "Neuer Code erfolgreich hinzugefügt!";
-                adminMessage.className = ""; // Fehlerklasse zurücksetzen
-                updateAdminPanel(); // Admin-Panel updaten
-            } else {
-                adminMessage.textContent = "Ungültiger Code oder Coin-Wert!";
-                adminMessage.className = "error-message"; // Fehlerklasse hinzufügen
-            }
-
-            // Eingabefelder leeren
-            document.getElementById("newCodeInput").value = "";
-            document.getElementById("coinValue").value = "";
-
-            // Daten in LocalStorage speichern
-            localStorage.setItem('codes', JSON.stringify(codes));
-        }
-
-        function updateAdminPanel() {
-            const activeCodesTable = document.getElementById("activeCodes").getElementsByTagName('tbody')[0];
-            activeCodesTable.innerHTML = ""; // Tabelle leeren
-
-            for (const [code, value] of Object.entries(codes)) {
-                const newRow = activeCodesTable.insertRow();
-                newRow.insertCell(0).textContent = code;
-                newRow.insertCell(1).textContent = value; // Coin-Wert des Codes anzeigen
-            }
-        }
-
-        function resetAll() {
-            if (confirm("Bist du sicher, dass du alle Daten zurücksetzen möchtest?")) {
-                codes = {}; // Codes zurücksetzen
-                users = {}; // Nutzer zurücksetzen
-                coinPrice = 10.00; // Preis auf Standard zurücksetzen
-                localStorage.removeItem('codes'); // Codes aus LocalStorage entfernen
-                localStorage.removeItem('users'); // Nutzer aus LocalStorage entfernen
-                localStorage.setItem('coinPrice', coinPrice); // Preis zurücksetzen
-                updateUI(); // UI aktualisieren
-                updateAdminPanel(); // Admin-Panel aktualisieren
-            }
-        }
-
-        // UI beim Laden der Seite initialisieren
-        document.addEventListener('DOMContentLoaded', () => {
-            updateUI(); // UI mit gespeicherten Daten aktualisieren
-            updateAdminPanel(); // Admin-Panel mit gespeicherten Codes aktualisieren
-            document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $"; // Preis anzeigen
-        });
     </script>
 </body>
 </html>
