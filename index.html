@@ -11,18 +11,15 @@
             padding: 20px;
             background-color: #f4f4f4;
         }
-
         header {
             text-align: center;
             background-color: #4CAF50;
             color: white;
             padding: 10px 0;
         }
-
         h1, h2 {
             margin: 0;
         }
-
         section {
             margin: 20px 0;
             padding: 20px;
@@ -30,13 +27,11 @@
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-
         input[type="text"], input[type="password"], input[type="number"] {
             width: 200px;
             padding: 10px;
             margin: 10px 0;
         }
-
         button {
             padding: 10px 20px;
             background-color: #4CAF50;
@@ -45,17 +40,14 @@
             border-radius: 5px;
             cursor: pointer;
         }
-
         button:hover {
             background-color: #45a049;
         }
-
         .error-message {
             color: red;
             font-weight: bold;
         }
-
-        .message {
+        .success-message {
             color: green;
             font-weight: bold;
         }
@@ -67,14 +59,9 @@
     </header>
 
     <main>
-        <section id="auth-choice">
-            <h2>Wählen Sie:</h2>
-            <button onclick="showLoginForm()">Anmelden</button>
-            <button onclick="showRegisterForm()">Registrieren</button>
-        </section>
-
-        <section id="auth-section" style="display:none;">
-            <form id="registerForm" style="display:none;">
+        <section id="auth-section">
+            <h2>Registrieren / Anmelden</h2>
+            <form id="registerForm">
                 <h3>Registrierung</h3>
                 <label for="username">Benutzername:</label>
                 <input type="text" id="username" placeholder="Benutzername" required>
@@ -82,17 +69,14 @@
                 <label for="discord">Discord-Name:</label>
                 <input type="text" id="discord" placeholder="Discord-Name" required>
 
-                <label for="realName">Name:</label>
-                <input type="text" id="realName" placeholder="Vollständiger Name" required>
-
                 <label for="password">Passwort:</label>
                 <input type="password" id="password" placeholder="Passwort" required>
 
                 <button type="button" onclick="register()">Registrieren</button>
-                <p id="registerFeedback" class="error-message"></p>
+                <p id="registerFeedback"></p>
             </form>
 
-            <form id="loginForm" style="display:none;">
+            <form id="loginForm">
                 <h3>Anmeldung</h3>
                 <label for="loginUsername">Benutzername:</label>
                 <input type="text" id="loginUsername" placeholder="Benutzername" required>
@@ -101,86 +85,63 @@
                 <input type="password" id="loginPassword" placeholder="Passwort" required>
 
                 <button type="button" onclick="login()">Anmelden</button>
-                <p id="loginFeedback" class="error-message"></p>
+                <p id="loginFeedback"></p>
             </form>
         </section>
     </main>
 
     <script>
-        let users = [];
-
-        // Zeige Login-Formular
-        function showLoginForm() {
-            document.getElementById('auth-choice').style.display = 'none';
-            document.getElementById('auth-section').style.display = 'block';
-            document.getElementById('loginForm').style.display = 'block';
-        }
-
-        // Zeige Registrierungs-Formular
-        function showRegisterForm() {
-            document.getElementById('auth-choice').style.display = 'none';
-            document.getElementById('auth-section').style.display = 'block';
-            document.getElementById('registerForm').style.display = 'block';
-        }
-
-        // Funktion zur Registrierung
         function register() {
             const username = document.getElementById('username').value;
             const discord = document.getElementById('discord').value;
-            const realName = document.getElementById('realName').value;
             const password = document.getElementById('password').value;
 
-            if (username && discord && realName && password) {
-                const transferCode = generateTransferCode();
-
-                // Hier Datenbankintegration für Registrierung
-                const newUser = {
-                    username: username,
-                    discord: discord,
-                    realName: realName,
-                    password: password,
-                    coins: 0,
-                    transferCode: transferCode
-                };
-
-                users.push(newUser); // Pseudo-Datenbank
-                document.getElementById('registerFeedback').innerText = 'Registrierung erfolgreich!';
-                document.getElementById('registerForm').style.display = 'none';
-                document.getElementById('loginForm').style.display = 'block';
-
-                // Hier sollte der neue User in die echte Datenbank gespeichert werden.
-                // z.B.: saveUserToDatabase(newUser);
-            } else {
-                document.getElementById('registerFeedback').innerText = 'Alle Felder müssen ausgefüllt werden!';
-            }
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, discord, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const registerFeedback = document.getElementById('registerFeedback');
+                if (data.success) {
+                    registerFeedback.textContent = data.message;
+                    registerFeedback.className = 'success-message';
+                    window.location.href = '/main';  // Nach erfolgreicher Registrierung umleiten
+                } else {
+                    registerFeedback.textContent = data.message;
+                    registerFeedback.className = 'error-message';
+                }
+            })
+            .catch(err => console.error('Fehler:', err));
         }
 
-        // Funktion zur Anmeldung
         function login() {
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
 
-            // Hier Datenbankintegration zur Überprüfung der Login-Daten
-            const user = users.find(user => user.username === username && user.password === password);
-            if (user) {
-                loggedInUser = user;
-                document.getElementById('loginFeedback').innerText = '';
-                // Weiter zur Hauptseite oder zum Dashboard
-            } else {
-                document.getElementById('loginFeedback').innerText = 'Falsche Anmeldedaten!';
-            }
-        }
-
-        // Funktion zur Generierung der Überweisungsnummer
-        function generateTransferCode() {
-            return Math.floor(10000 + Math.random() * 90000).toString();
-        }
-
-        // Beispiel einer Funktion, die die Benutzer in einer echten Datenbank speichert (Pseudocode)
-        function saveUserToDatabase(user) {
-            // Hier würde der echte API-Aufruf oder die Datenbankabfrage erfolgen
-            // z.B. mit fetch(), AJAX oder einer Server-seitigen Lösung
-            console.log('Benutzer in die Datenbank gespeichert:', user);
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const loginFeedback = document.getElementById('loginFeedback');
+                if (data.success) {
+                    loginFeedback.textContent = data.message;
+                    loginFeedback.className = 'success-message';
+                    window.location.href = '/main';  // Nach erfolgreicher Anmeldung umleiten
+                } else {
+                    loginFeedback.textContent = data.message;
+                    loginFeedback.className = 'error-message';
+                }
+            })
+            .catch(err => console.error('Fehler:', err));
         }
     </script>
 </body>
