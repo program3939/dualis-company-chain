@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual-Coin</title>
+    <title>Dual-Coin Admin Panel</title>
     <style>
-        /* CSS für besseres Design */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
@@ -33,12 +32,6 @@
             background-color: #4CAF50; /* Grüner Hintergrund */
             color: white;
         }
-        .error-message {
-            color: red;
-        }
-        .success-message {
-            color: green;
-        }
         input[type="text"], input[type="password"], input[type="number"] {
             width: calc(100% - 20px);
             padding: 10px;
@@ -46,10 +39,6 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             transition: border-color 0.3s;
-        }
-        input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
-            border-color: #4CAF50;
-            outline: none;
         }
         button {
             background-color: #4CAF50; /* Grüner Hintergrund */
@@ -61,7 +50,13 @@
             transition: background-color 0.3s;
         }
         button:hover {
-            background-color: #45a049; /* Dunklerer Grüner Hintergrund */
+            background-color: #45a049;
+        }
+        .error-message {
+            color: red;
+        }
+        .success-message {
+            color: green;
         }
         #adminPanel {
             background: #ffffff;
@@ -74,214 +69,151 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js"></script>
 </head>
 <body>
-    <header>
-        <h1>Willkommen bei Dual-Coin</h1>
-    </header>
 
-    <main>
-        <section id="interactive-machine">
-            <h2>Interaktiver Automat</h2>
-            <p><strong>Aktueller Preis:</strong> <span id="coinPrice">10.00 $</span></p>
-            <input type="text" id="discordInput" maxlength="20" placeholder="Discord-Name eingeben">
-            <input type="text" id="codeInput" maxlength="8" placeholder="Code eingeben">
-            <button onclick="submitCode()">Einreichen</button>
-            <div id="message" class="error-message"></div>
-        </section>
+<header>
+    <h1>Dual-Coin Admin Panel</h1>
+</header>
 
-        <section id="leaderboard">
-            <h2>Leaderboard</h2>
-            <table>
+<main>
+    <section id="admin-access">
+        <h2>Mitarbeiterzugang</h2>
+        <input type="text" id="adminUsername" placeholder="Benutzername">
+        <input type="password" id="adminPassword" placeholder="Passwort">
+        <button onclick="login()">Einloggen</button>
+        <div id="loginMessage"></div>
+        <div id="adminPanel" style="display:none;">
+            <h3>Admin-Panel</h3>
+            <h4>Coin-Preis ändern:</h4>
+            <input type="number" id="newCoinPrice" placeholder="Neuer Preis" step="0.01">
+            <button onclick="changeCoinPrice()">Preis ändern</button>
+
+            <h4>Neuen Code hinzufügen:</h4>
+            <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
+            <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)">
+            <button onclick="addCode()">Code hinzufügen</button>
+
+            <h4>Aktive Codes:</h4>
+            <table id="activeCodes">
                 <thead>
                     <tr>
-                        <th>Discord-Name</th>
-                        <th>Coins</th>
+                        <th>Code</th>
+                        <th>Coin-Wert</th>
+                        <th>Aktionen</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Leaderboard-Daten werden hier dynamisch hinzugefügt -->
                 </tbody>
             </table>
-        </section>
+        </div>
+    </section>
+</main>
 
-        <section id="admin-access">
-            <h2>Mitarbeiterzugang</h2>
-            <input type="text" id="adminUsername" placeholder="Benutzername">
-            <input type="password" id="adminPassword" placeholder="Passwort">
-            <button onclick="login()">Einloggen</button>
-            <div id="loginMessage"></div> <!-- Erfolgs- oder Fehlermeldung anzeigen -->
-            <div id="adminPanel" style="display:none;">
-                <h3>Admin-Panel</h3>
-                <h4>Coin-Preis ändern:</h4>
-                <input type="number" id="newCoinPrice" placeholder="Neuer Preis" step="0.01">
-                <button onclick="changeCoinPrice()">Preis ändern</button>
+<footer>
+    <p>&copy; 2024 Dual-Coin. Alle Rechte vorbehalten.</p>
+</footer>
 
-                <h4>Neuen Code hinzufügen:</h4>
-                <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
-                <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)">
-                <button onclick="addCode()">Code hinzufügen</button>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
+        authDomain: "dualis-company-chain.firebaseapp.com",
+        databaseURL: "https://dualis-company-chain-default-rtdb.firebaseio.com",
+        projectId: "dualis-company-chain",
+        storageBucket: "dualis-company-chain.appspot.com",
+        messagingSenderId: "521000433736",
+        appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d",
+    };
 
-                <h4>Coins verwalten:</h4>
-                <input type="text" id="userDiscord" placeholder="Discord-Name des Nutzers">
-                <input type="number" id="coinChange" placeholder="Coins hinzufügen/entfernen">
-                <button onclick="updateUserCoins()">Coins aktualisieren</button>
+    // Firebase initialisieren
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
-                <h4>Aktive Codes:</h4>
-                <table id="activeCodes">
-                    <thead>
-                        <tr>
-                            <th>Code</th>
-                            <th>Coin-Wert</th>
-                            <th>Aktionen</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Aktive Codes werden hier angezeigt -->
-                    </tbody>
-                </table>
-                <button onclick="resetAll()">Alle zurücksetzen</button>
-            </div>
-        </section>
-    </main>
+    // Login-Funktion
+    function login() {
+        const username = document.getElementById('adminUsername').value;
+        const password = document.getElementById('adminPassword').value;
 
-    <footer>
-        <p>&copy; 2024 Dual-Coin. Alle Rechte vorbehalten.</p>
-    </footer>
+        if (username === "Dualis" && password === "28102006") {
+            document.getElementById('adminPanel').style.display = 'block';
+            document.getElementById('loginMessage').innerText = 'Erfolgreich eingeloggt!';
+            loadActiveCodes();  // Aktive Codes laden
+        } else {
+            document.getElementById('loginMessage').innerText = 'Falscher Benutzername oder Passwort!';
+        }
+    }
 
-    <script>
-        // Firebase-Konfiguration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
-            authDomain: "dualis-company-chain.firebaseapp.com",
-            databaseURL: "https://dualis-company-chain-default-rtdb.firebaseio.com",
-            projectId: "dualis-company-chain",
-            storageBucket: "dualis-company-chain.appspot.com",
-            messagingSenderId: "521000433736",
-            appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d",
-            measurementId: "G-JEYQSXL8Z9"
-        };
+    // Codes laden und anzeigen
+    function loadActiveCodes() {
+        const activeCodesRef = database.ref('activeCodes/');
+        activeCodesRef.once('value', (snapshot) => {
+            const tbody = document.querySelector('#activeCodes tbody');
+            tbody.innerHTML = ''; // Tabelle leeren
 
-        // Firebase initialisieren
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+            snapshot.forEach((childSnapshot) => {
+                const code = childSnapshot.key;
+                const value = childSnapshot.val();
 
-        // Funktion zum Einreichen eines Codes
-        function submitCode() {
-            const discordName = document.getElementById('discordInput').value;
-            const code = document.getElementById('codeInput').value;
-
-            if (!discordName || !code) {
-                displayMessage('Bitte alle Felder ausfüllen!', true);
-                return;
-            }
-
-            const codesRef = database.ref('activeCodes/');
-            codesRef.once('value').then((snapshot) => {
-                if (snapshot.exists()) {
-                    const activeCodes = snapshot.val();
-                    if (activeCodes[code]) {
-                        const coinValue = activeCodes[code];
-                        updateUserCoins(discordName, coinValue);
-                        displayMessage('Code erfolgreich eingereicht!');
-                    } else {
-                        displayMessage('Ungültiger Code!', true);
-                    }
-                } else {
-                    displayMessage('Keine aktiven Codes gefunden!', true);
-                }
-            }).catch((error) => {
-                console.error("Fehler beim Abrufen der Codes: ", error);
-                displayMessage('Fehler beim Abrufen der Codes!', true);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${code}</td>
+                    <td>${value}</td>
+                    <td><button onclick="removeCode('${code}')">Entfernen</button></td>
+                `;
+                tbody.appendChild(row);
             });
-        }
+        });
+    }
 
-        // Funktion zur Anzeige von Erfolg-/Fehlermeldungen
-        function displayMessage(msg, isError = false) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.textContent = msg;
-            messageDiv.className = isError ? 'error-message' : 'success-message';
-        }
+    // Code hinzufügen
+    function addCode() {
+        const newCode = document.getElementById('newCodeInput').value;
+        const coinValue = document.getElementById('coinValue').value;
 
-        // Admin Login-Funktion
-        function login() {
-            const username = document.getElementById('adminUsername').value;
-            const password = document.getElementById('adminPassword').value;
-
-            if (username === "Dualis" && password === "28102006") {
-                document.getElementById('adminPanel').style.display = 'block';
-                document.getElementById('loginMessage').textContent = 'Erfolgreich eingeloggt!';
-                loadActiveCodes(); // Aktive Codes nach dem Login laden
-            } else {
-                document.getElementById('loginMessage').textContent = 'Falscher Benutzername oder Passwort!';
-            }
-        }
-
-        // Funktion zum Laden der aktiven Codes
-        function loadActiveCodes() {
-            const activeCodesRef = database.ref('activeCodes/');
-            activeCodesRef.once('value').then((snapshot) => {
-                const activeCodesTableBody = document.querySelector('#activeCodes tbody');
-                activeCodesTableBody.innerHTML = ''; // Leere Tabelle
-                snapshot.forEach((childSnapshot) => {
-                    const code = childSnapshot.key;
-                    const value = childSnapshot.val();
-                    const row = activeCodesTableBody.insertRow();
-                    row.innerHTML = `<td>${code}</td><td>${value}</td><td><button onclick="removeCode('${code}')">Entfernen</button></td>`;
+        if (newCode && coinValue) {
+            const codeRef = database.ref('activeCodes/' + newCode);
+            codeRef.set(parseInt(coinValue))
+                .then(() => {
+                    alert('Code erfolgreich hinzugefügt!');
+                    loadActiveCodes();  // Codes neu laden
+                })
+                .catch((error) => {
+                    alert('Fehler beim Hinzufügen des Codes: ' + error.message);
                 });
-            });
+        } else {
+            alert('Bitte alle Felder ausfüllen!');
         }
+    }
 
-        function addCode() {
-            const newCode = document.getElementById('newCodeInput').value;
-            const coinValue = parseInt(document.getElementById('coinValue').value);
-
-            if (!newCode || isNaN(coinValue) || coinValue <= 0) {
-                alert('Bitte gültige Werte für Code und Coin-Wert eingeben!');
-                return;
-            }
-
-            database.ref('activeCodes/' + newCode).set(coinValue).then(() => {
-                alert('Code erfolgreich hinzugefügt!');
-                loadActiveCodes(); // Nach dem Hinzufügen den Code in die Tabelle laden
-            }).catch((error) => {
-                console.error("Fehler beim Hinzufügen des Codes: ", error);
-            });
-        }
-
-        function removeCode(code) {
-            database.ref('activeCodes/' + code).remove().then(() => {
+    // Code entfernen
+    function removeCode(code) {
+        database.ref('activeCodes/' + code).remove()
+            .then(() => {
                 alert('Code erfolgreich entfernt!');
-                loadActiveCodes(); // Nach dem Entfernen den Code in die Tabelle laden
-            }).catch((error) => {
-                console.error("Fehler beim Entfernen des Codes: ", error);
+                loadActiveCodes();  // Codes neu laden
+            })
+            .catch((error) => {
+                alert('Fehler beim Entfernen des Codes: ' + error.message);
             });
-        }
+    }
 
-        function updateUserCoins(discordName, coinValue) {
-            // Logik zum Aktualisieren der Coins eines Benutzers
-            alert(discordName + ' hat ' + coinValue + ' Coins erhalten!');
-        }
+    // Coin-Preis ändern
+    function changeCoinPrice() {
+        const newPrice = document.getElementById('newCoinPrice').value;
 
-        function changeCoinPrice() {
-            const newPrice = parseFloat(document.getElementById('newCoinPrice').value);
-            if (isNaN(newPrice) || newPrice <= 0) {
-                alert('Bitte geben Sie einen gültigen Preis ein!');
-                return;
-            }
-            database.ref('coinPrice').set(newPrice).then(() => {
-                document.getElementById('coinPrice').innerText = newPrice.toFixed(2) + ' $';
-                alert('Preis erfolgreich geändert!');
-            }).catch((error) => {
-                console.error("Fehler beim Ändern des Preises: ", error);
-            });
+        if (newPrice) {
+            database.ref('coinPrice').set(parseFloat(newPrice))
+                .then(() => {
+                    alert('Preis erfolgreich geändert!');
+                })
+                .catch((error) => {
+                    alert('Fehler beim Ändern des Preises: ' + error.message);
+                });
+        } else {
+            alert('Bitte einen gültigen Preis eingeben!');
         }
+    }
+</script>
 
-        function resetAll() {
-            // Hier kannst du die Logik zum Zurücksetzen aller Daten implementieren
-            alert('Alle Daten wurden zurückgesetzt!');
-        }
-    </script>
 </body>
 </html>
