@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual-Coin</title>
+    <title>Dual-Coin Admin Panel</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,15 +11,18 @@
             padding: 20px;
             background-color: #f4f4f4;
         }
+
         header {
             text-align: center;
             background-color: #4CAF50;
             color: white;
             padding: 10px 0;
         }
+
         h1, h2 {
             margin: 0;
         }
+
         section {
             margin: 20px 0;
             padding: 20px;
@@ -27,11 +30,13 @@
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+
         input[type="text"], input[type="password"], input[type="number"] {
             width: 200px;
             padding: 10px;
             margin: 10px 0;
         }
+
         button {
             padding: 10px 20px;
             background-color: #4CAF50;
@@ -40,16 +45,46 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
         button:hover {
             background-color: #45a049;
         }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
         .error-message {
             color: red;
             font-weight: bold;
         }
-        .success-message {
+
+        .message {
             color: green;
             font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            input[type="text"], input[type="password"], button {
+                width: 100%;
+                margin: 10px 0;
+            }
+
+            section {
+                padding: 10px;
+            }
         }
     </style>
 </head>
@@ -59,90 +94,139 @@
     </header>
 
     <main>
-        <section id="auth-section">
-            <h2>Registrieren / Anmelden</h2>
-            <form id="registerForm">
-                <h3>Registrierung</h3>
-                <label for="username">Benutzername:</label>
-                <input type="text" id="username" placeholder="Benutzername" required>
+        <!-- Leaderboard -->
+        <section id="leaderboard">
+            <h2>Leaderboard</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Discord-Name</th>
+                        <th>Coins</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamisch generierte Daten -->
+                </tbody>
+            </table>
+        </section>
 
-                <label for="discord">Discord-Name:</label>
-                <input type="text" id="discord" placeholder="Discord-Name" required>
+        <!-- Admin-Zugang -->
+        <section id="admin-access">
+            <h2>Mitarbeiterzugang</h2>
+            <input type="text" id="adminUsername" placeholder="Benutzername">
+            <input type="password" id="adminPassword" placeholder="Passwort">
+            <button onclick="login()">Einloggen</button>
 
-                <label for="password">Passwort:</label>
-                <input type="password" id="password" placeholder="Passwort" required>
+            <!-- Admin-Panel -->
+            <div id="adminPanel" style="display:none;">
+                <h3>Admin-Panel</h3>
 
-                <button type="button" onclick="register()">Registrieren</button>
-                <p id="registerFeedback"></p>
-            </form>
+                <!-- Coins hinzufügen/entfernen -->
+                <h4>Coins hinzufügen/entfernen</h4>
+                <input type="text" id="userNameInput" placeholder="Benutzername">
+                <input type="number" id="coinAmountInput" placeholder="Anzahl der Coins">
+                <button onclick="modifyCoins()">Coins ändern</button>
 
-            <form id="loginForm">
-                <h3>Anmeldung</h3>
-                <label for="loginUsername">Benutzername:</label>
-                <input type="text" id="loginUsername" placeholder="Benutzername" required>
+                <!-- Coins übertragen -->
+                <h4>Coins übertragen</h4>
+                <input type="text" id="fromUserInput" placeholder="Von Benutzer">
+                <input type="text" id="toUserInput" placeholder="Zu Benutzer">
+                <input type="number" id="transferAmountInput" placeholder="Anzahl der Coins">
+                <button onclick="transferCoins()">Coins übertragen</button>
 
-                <label for="loginPassword">Passwort:</label>
-                <input type="password" id="loginPassword" placeholder="Passwort" required>
-
-                <button type="button" onclick="login()">Anmelden</button>
-                <p id="loginFeedback"></p>
-            </form>
+                <!-- Nachrichtenfeld -->
+                <div id="adminMessage" class="error-message"></div>
+            </div>
         </section>
     </main>
 
+    <footer>
+        <p>&copy; 2024 Dual-Coin. Alle Rechte vorbehalten.</p>
+    </footer>
+
     <script>
-        function register() {
-            const username = document.getElementById('username').value;
-            const discord = document.getElementById('discord').value;
-            const password = document.getElementById('password').value;
+        // Simulierte Benutzerdaten
+        let users = {
+            'User1': { coins: 100 },
+            'User2': { coins: 50 },
+            'User3': { coins: 200 },
+        };
 
-            fetch('/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, discord, password })
-            })
-            .then(response => response.json())
-            .then(data => {
-                const registerFeedback = document.getElementById('registerFeedback');
-                if (data.success) {
-                    registerFeedback.textContent = data.message;
-                    registerFeedback.className = 'success-message';
-                    window.location.href = '/main';  // Nach erfolgreicher Registrierung umleiten
-                } else {
-                    registerFeedback.textContent = data.message;
-                    registerFeedback.className = 'error-message';
-                }
-            })
-            .catch(err => console.error('Fehler:', err));
+        // Admin-Zugangsdaten
+        const adminCredentials = {
+            username: 'admin',
+            password: 'password123'
+        };
+
+        // Coins hinzufügen oder entfernen
+        function modifyCoins() {
+            const user = document.getElementById('userNameInput').value;
+            const amount = parseInt(document.getElementById('coinAmountInput').value);
+
+            if (users[user]) {
+                users[user].coins += amount;
+                document.getElementById('adminMessage').textContent = `${amount} Coins zu ${user} hinzugefügt/entfernt. Neuer Stand: ${users[user].coins} Coins.`;
+                document.getElementById('adminMessage').className = "message";
+                updateLeaderboard(); // Leaderboard aktualisieren
+            } else {
+                document.getElementById('adminMessage').textContent = `Benutzer ${user} nicht gefunden!`;
+                document.getElementById('adminMessage').className = "error-message";
+            }
         }
 
+        // Coins von einem Benutzer zu einem anderen übertragen
+        function transferCoins() {
+            const fromUser = document.getElementById('fromUserInput').value;
+            const toUser = document.getElementById('toUserInput').value;
+            const amount = parseInt(document.getElementById('transferAmountInput').value);
+
+            if (users[fromUser] && users[toUser]) {
+                if (users[fromUser].coins >= amount) {
+                    users[fromUser].coins -= amount;
+                    users[toUser].coins += amount;
+                    document.getElementById('adminMessage').textContent = `${amount} Coins von ${fromUser} zu ${toUser} übertragen.`;
+                    document.getElementById('adminMessage').className = "message";
+                    updateLeaderboard(); // Leaderboard aktualisieren
+                } else {
+                    document.getElementById('adminMessage').textContent = `${fromUser} hat nicht genug Coins!`;
+                    document.getElementById('adminMessage').className = "error-message";
+                }
+            } else {
+                document.getElementById('adminMessage').textContent = `Benutzer nicht gefunden!`;
+                document.getElementById('adminMessage').className = "error-message";
+            }
+        }
+
+        // Leaderboard aktualisieren
+        function updateLeaderboard() {
+            const leaderboardBody = document.querySelector("#leaderboard tbody");
+            leaderboardBody.innerHTML = ''; // Vorherige Daten löschen
+
+            for (const user in users) {
+                const row = `<tr><td>${user}</td><td>${users[user].coins}</td></tr>`;
+                leaderboardBody.innerHTML += row;
+            }
+        }
+
+        // Admin-Login
         function login() {
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
 
-            fetch('/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            })
-            .then(response => response.json())
-            .then(data => {
-                const loginFeedback = document.getElementById('loginFeedback');
-                if (data.success) {
-                    loginFeedback.textContent = data.message;
-                    loginFeedback.className = 'success-message';
-                    window.location.href = '/main';  // Nach erfolgreicher Anmeldung umleiten
-                } else {
-                    loginFeedback.textContent = data.message;
-                    loginFeedback.className = 'error-message';
-                }
-            })
-            .catch(err => console.error('Fehler:', err));
+            if (username === adminCredentials.username && password === adminCredentials.password) {
+                document.getElementById('adminPanel').style.display = 'block';
+                document.getElementById('adminMessage').textContent = 'Erfolgreich eingeloggt!';
+                document.getElementById('adminMessage').className = 'message';
+            } else {
+                document.getElementById('adminMessage').textContent = 'Falsche Anmeldedaten!';
+                document.getElementById('adminMessage').className = 'error-message';
+            }
         }
+
+        // Initialisierung des Leaderboards beim Laden der Seite
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLeaderboard();
+        });
     </script>
 </body>
 </html>
