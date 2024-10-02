@@ -217,6 +217,9 @@
             <label>
                 <input type="checkbox" id="randomCodeCheckbox"> Zufälligen 8-stelligen Code generieren
             </label>
+            <label>
+                <input type="checkbox" id="multiUseCheckbox"> Mehrfach verwendbaren Code erstellen
+            </label>
             <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code (oder leer lassen)">
             <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)">
             <button onclick="generateCode()">Code generieren</button>
@@ -226,6 +229,7 @@
                     <tr>
                         <th>Code</th>
                         <th>Coin-Wert</th>
+                        <th>Status</th>
                         <th>Aktionen</th>
                     </tr>
                 </thead>
@@ -285,9 +289,16 @@
         const codeRef = database.ref('activeCodes/' + code);
         codeRef.once('value').then((snapshot) => {
             if (snapshot.exists()) {
-                const coinValue = snapshot.val();
+                const coinValue = snapshot.val().value;
+                const isMultiUse = snapshot.val().multiUse;
+
                 animateCoins(coinValue);
                 updateLeaderboard(discordName, coinValue);
+
+                // Status des Codes aktualisieren
+                if (!isMultiUse) {
+                    codeRef.remove(); // Code entfernen, wenn nicht mehrfach verwendbar
+                }
             } else {
                 message.style.display = 'block';
                 message.innerText = 'Ungültiger Code!';
@@ -349,6 +360,7 @@
         let newCode = document.getElementById('newCodeInput').value;
         const coinValue = document.getElementById('coinValue').value;
         const randomCodeCheckbox = document.getElementById('randomCodeCheckbox');
+        const multiUseCheckbox = document.getElementById('multiUseCheckbox');
 
         if (randomCodeCheckbox.checked) {
             newCode = generateRandomCode();
@@ -361,14 +373,17 @@
         }
 
         const codeRef = database.ref('activeCodes/' + newCode);
-        codeRef.set(parseInt(coinValue))
-            .then(() => {
-                alert('Code erfolgreich generiert!');
-                loadActiveCodes();
-            })
-            .catch((error) => {
-                alert('Fehler beim Generieren des Codes: ' + error.message);
-            });
+        codeRef.set({
+            value: parseInt(coinValue),
+            multiUse: multiUseCheckbox.checked
+        })
+        .then(() => {
+            alert('Code erfolgreich generiert!');
+            loadActiveCodes();
+        })
+        .catch((error) => {
+            alert('Fehler beim Generieren des Codes: ' + error.message);
+        });
     }
 
     function generateRandomCode() {
@@ -383,12 +398,14 @@
 
             snapshot.forEach((childSnapshot) => {
                 const code = childSnapshot.key;
-                const value = childSnapshot.val();
+                const value = childSnapshot.val().value;
+                const isExpired = childSnapshot.val().multiUse === false ? "Einmalig" : "Mehrfach";
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${code}</td>
                     <td>${value}</td>
+                    <td>${isExpired}</td>
                     <td><button class="remove-btn" onclick="removeCode('${code}')">Entfernen</button></td>
                 `;
                 tbody.appendChild(row);
@@ -432,7 +449,7 @@
             } else {
                 clearInterval(interval);
             }
-        }, stepTime); 
+        }, stepTime);
     }
 
     loadLeaderboard();
