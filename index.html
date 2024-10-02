@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dual-Coin</title>
     <style>
-        /* Beispiel CSS */
+        /* CSS für besseres Design */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
@@ -71,7 +71,7 @@
             margin-top: 20px;
         }
     </style>
-    <!-- Firebase SDKs einfügen -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js"></script>
@@ -111,7 +111,7 @@
             <input type="text" id="adminUsername" placeholder="Benutzername">
             <input type="password" id="adminPassword" placeholder="Passwort">
             <button onclick="login()">Einloggen</button>
-            <div id="loginMessage"></div> <!-- Hier wird die Erfolgs- oder Fehlermeldung angezeigt -->
+            <div id="loginMessage"></div> <!-- Erfolgs- oder Fehlermeldung anzeigen -->
             <div id="adminPanel" style="display:none;">
                 <h3>Admin-Panel</h3>
                 <h4>Coin-Preis ändern:</h4>
@@ -167,6 +167,7 @@
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
+        // Funktion zum Einreichen eines Codes
         function submitCode() {
             const discordName = document.getElementById('discordInput').value;
             const code = document.getElementById('codeInput').value;
@@ -196,12 +197,14 @@
             });
         }
 
+        // Funktion zur Anzeige von Erfolg-/Fehlermeldungen
         function displayMessage(msg, isError = false) {
             const messageDiv = document.getElementById('message');
             messageDiv.textContent = msg;
             messageDiv.className = isError ? 'error-message' : 'success-message';
         }
 
+        // Admin Login-Funktion
         function login() {
             const username = document.getElementById('adminUsername').value;
             const password = document.getElementById('adminPassword').value;
@@ -209,18 +212,19 @@
             if (username === "Dualis" && password === "28102006") {
                 document.getElementById('adminPanel').style.display = 'block';
                 document.getElementById('loginMessage').textContent = 'Erfolgreich eingeloggt!';
-                loadActiveCodes(); // Lade aktive Codes beim Einloggen
+                loadActiveCodes(); // Aktive Codes nach dem Login laden
             } else {
                 document.getElementById('loginMessage').textContent = 'Falscher Benutzername oder Passwort!';
             }
         }
 
+        // Funktion zum Laden der aktiven Codes
         function loadActiveCodes() {
             const activeCodesRef = database.ref('activeCodes/');
             activeCodesRef.once('value').then((snapshot) => {
-                const activeCodesTableBody = document.getElementById('activeCodes').getElementsByTagName('tbody')[0];
-                activeCodesTableBody.innerHTML = ''; // Leeren des aktuellen Inhalts
-                snapshot.forEach(childSnapshot => {
+                const activeCodesTableBody = document.querySelector('#activeCodes tbody');
+                activeCodesTableBody.innerHTML = ''; // Leere Tabelle
+                snapshot.forEach((childSnapshot) => {
                     const code = childSnapshot.key;
                     const value = childSnapshot.val();
                     const row = activeCodesTableBody.insertRow();
