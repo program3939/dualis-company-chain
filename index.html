@@ -249,213 +249,167 @@
 
 <script>
     const firebaseConfig = {
-        apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
-        authDomain: "dualis-company-chain.firebaseapp.com",
-        databaseURL: "https://dualis-company-chain-default-rtdb.firebaseio.com",
-        projectId: "dualis-company-chain",
-        storageBucket: "dualis-company-chain.appspot.com",
-        messagingSenderId: "521000433736",
-        appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d"
+        apiKey: "DEIN_API_KEY",
+        authDomain: "DEIN_PROJEKT.firebaseapp.com",
+        databaseURL: "https://DEIN_PROJEKT.firebaseio.com",
+        projectId: "DEIN_PROJEKT",
+        storageBucket: "DEIN_PROJEKT.appspot.com",
+        messagingSenderId: "DEIN_SENDER_ID",
+        appId: "DEINE_APP_ID"
     };
 
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    function login() {
-        const username = document.getElementById('adminUsername').value;
-        const password = document.getElementById('adminPassword').value;
-        const loginMessage = document.getElementById('loginMessage');
-
-        if (username === "Dualis" && password === "28102006") {
-            document.getElementById('adminPanel').style.display = 'block';
-            loginMessage.style.display = 'none';
-            loadActiveCodes();
-            loadLeaderboard();
-        } else {
-            loginMessage.style.display = 'block';
-            loginMessage.innerText = 'Ungültiger Benutzername oder Passwort!';
-        }
-    }
-
     function submitCode() {
-        const discordName = document.getElementById('discordInput').value;
-        const code = document.getElementById('codeInput').value;
+        const discordName = document.getElementById('discordInput').value.trim();
+        const code = document.getElementById('codeInput').value.trim();
         const message = document.getElementById('message');
 
         if (!discordName || !code) {
             message.style.display = 'block';
-            message.innerText = 'Bitte beide Felder ausfüllen!';
+            message.className = 'error-message';
+            message.innerText = 'Bitte fülle alle Felder aus!';
             return;
         }
 
-        const codeRef = database.ref('activeCodes/' + code);
-        codeRef.once('value').then((snapshot) => {
-            if (snapshot.exists()) {
-                const coinValue = snapshot.val().value;
-                const isMultiUse = snapshot.val().multiUse;
-
-                animateCoins(coinValue);
-                updateLeaderboard(discordName, coinValue);
-
-                // Status des Codes aktualisieren
-                if (!isMultiUse) {
-                    codeRef.remove(); // Code entfernen, wenn nicht mehrfach verwendbar
-                }
-            } else {
+        firebase.database().ref('codes/' + code).once('value').then(snapshot => {
+            if (!snapshot.exists()) {
                 message.style.display = 'block';
                 message.innerText = 'Ungültiger Code!';
+                return;
             }
-        }).catch((error) => {
-            message.style.display = 'block';
-            message.innerText = 'Fehler bei der Überprüfung des Codes: ' + error.message;
-        });
-    }
 
-    function animateCoins(amount) {
-        let currentAmount = 0;
-        const targetAmount = amount;
+            const coinValue = snapshot.val().value;
+            const multiUse = snapshot.val().multiUse;
 
-        const interval = setInterval(() => {
-            if (currentAmount < targetAmount) {
-                currentAmount++;
-                document.getElementById('message').innerText = `Du hast ${currentAmount} Coins erhalten.`;
-            } else {
-                clearInterval(interval);
-            }
-        }, 5000 / targetAmount); // Animation über 5 Sekunden
-    }
+            firebase.database().ref('leaderboard/' + discordName).once('value').then(userSnapshot => {
+                const currentCoins = userSnapshot.val() ? userSnapshot.val().coins : 0;
 
-    function updateLeaderboard(discordName, coins) {
-        const leaderboardRef = database.ref('leaderboard/' + discordName);
-        leaderboardRef.transaction((currentValue) => {
-            return (currentValue || 0) + coins;
-        }).then(() => {
-            loadLeaderboard();
-        }).catch((error) => {
-            console.error('Fehler beim Aktualisieren des Leaderboards:', error);
-        });
-    }
+                firebase.database().ref('leaderboard/' + discordName).set({
+                    coins: currentCoins + coinValue
+                }).then(() => {
+                    message.style.display = 'block';
+                    message.className = 'success-message';
+                    message.innerText = 'Code erfolgreich eingelöst!';
 
-    function loadLeaderboard() {
-        const leaderboardRef = database.ref('leaderboard/');
-        leaderboardRef.once('value').then((snapshot) => {
-            const tbody = document.querySelector('#leaderboard tbody');
-            tbody.innerHTML = '';
+                    if (!multiUse) {
+                        removeCode(code); // Code löschen, wenn nicht mehrfach verwendbar
+                    }
 
-            snapshot.forEach((childSnapshot) => {
-                const discordName = childSnapshot.key;
-                const coins = childSnapshot.val();
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${discordName}</td>
-                    <td>${coins}</td>
-                `;
-                tbody.appendChild(row);
+                    loadLeaderboard();
+                }).catch(error => {
+                    message.style.display = 'block';
+                    message.innerText = 'Fehler beim Einlösen des Codes: ' + error.message;
+                });
             });
-        }).catch((error) => {
-            console.error('Fehler beim Laden des Leaderboards:', error);
         });
-    }
-
-    function generateCode() {
-        let newCode = document.getElementById('newCodeInput').value;
-        const coinValue = document.getElementById('coinValue').value;
-        const randomCodeCheckbox = document.getElementById('randomCodeCheckbox');
-        const multiUseCheckbox = document.getElementById('multiUseCheckbox');
-
-        if (randomCodeCheckbox.checked) {
-            newCode = generateRandomCode();
-            document.getElementById('newCodeInput').value = newCode; // Setze den generierten Code ins Eingabefeld
-        }
-
-        if (!newCode || !coinValue) {
-            alert('Bitte alle Felder ausfüllen!');
-            return;
-        }
-
-        const codeRef = database.ref('activeCodes/' + newCode);
-        codeRef.set({
-            value: parseInt(coinValue),
-            multiUse: multiUseCheckbox.checked
-        })
-        .then(() => {
-            alert('Code erfolgreich generiert!');
-            loadActiveCodes();
-        })
-        .catch((error) => {
-            alert('Fehler beim Generieren des Codes: ' + error.message);
-        });
-    }
-
-    function generateRandomCode() {
-        return Math.random().toString(36).substring(2, 10).toUpperCase(); // 8-stelliger zufälliger Code
-    }
-
-    function loadActiveCodes() {
-        const activeCodesRef = database.ref('activeCodes/');
-        activeCodesRef.once('value').then((snapshot) => {
-            const tbody = document.querySelector('#activeCodes tbody');
-            tbody.innerHTML = '';
-
-            snapshot.forEach((childSnapshot) => {
-                const code = childSnapshot.key;
-                const value = childSnapshot.val().value;
-                const isExpired = childSnapshot.val().multiUse === false ? "Einmalig" : "Mehrfach";
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${code}</td>
-                    <td>${value}</td>
-                    <td>${isExpired}</td>
-                    <td><button class="remove-btn" onclick="removeCode('${code}')">Entfernen</button></td>
-                `;
-                tbody.appendChild(row);
-            });
-        }).catch((error) => {
-            console.error('Fehler beim Laden der aktiven Codes:', error);
-        });
-    }
-
-    function removeCode(code) {
-        const codeRef = database.ref('activeCodes/' + code);
-        codeRef.remove()
-            .then(() => {
-                alert('Code erfolgreich entfernt!');
-                loadActiveCodes();
-            })
-            .catch((error) => {
-                alert('Fehler beim Entfernen des Codes: ' + error.message);
-            });
     }
 
     function changeCoinPrice() {
         const newPrice = document.getElementById('newCoinPrice').value;
         if (newPrice) {
-            const coinPriceElement = document.getElementById('coinPrice');
-            animatePriceChange(coinPriceElement, parseFloat(newPrice));
+            document.getElementById('coinPrice').innerText = newPrice + ' $';
+            alert('Preis erfolgreich geändert!');
         } else {
-            alert('Bitte einen gültigen Preis eingeben!');
+            alert('Bitte einen gültigen Preis eingeben.');
         }
     }
 
-    function animatePriceChange(element, targetPrice) {
-        let currentPrice = parseFloat(element.innerText.replace('$', '').trim());
-        const duration = 5000; // 5 Sekunden
-        const stepTime = duration / (targetPrice - currentPrice);
+    function generateCode() {
+        const randomCodeCheckbox = document.getElementById('randomCodeCheckbox').checked;
+        const multiUseCheckbox = document.getElementById('multiUseCheckbox').checked;
+        const newCode = document.getElementById('newCodeInput').value || generateRandomCode();
+        const coinValue = document.getElementById('coinValue').value;
 
-        const interval = setInterval(() => {
-            if (currentPrice < targetPrice) {
-                currentPrice += 0.01; // Erhöhe um 0.01
-                element.innerText = `${currentPrice.toFixed(2)} $`;
-            } else {
-                clearInterval(interval);
-            }
-        }, stepTime);
+        if (!newCode || !coinValue) {
+            alert('Bitte fülle alle Felder aus oder generiere einen Code!');
+            return;
+        }
+
+        const codeData = {
+            code: newCode,
+            value: coinValue,
+            multiUse: multiUseCheckbox
+        };
+
+        const codeRef = firebase.database().ref('codes/' + newCode);
+        codeRef.set(codeData)
+            .then(() => {
+                alert('Code erfolgreich generiert!');
+                loadActiveCodes();
+            })
+            .catch(error => {
+                alert('Fehler beim Generieren des Codes: ' + error.message);
+            });
     }
 
-    loadLeaderboard();
+    function loadActiveCodes() {
+        const activeCodesTable = document.getElementById('activeCodes').getElementsByTagName('tbody')[0];
+        activeCodesTable.innerHTML = '';
+
+        firebase.database().ref('codes').once('value').then(snapshot => {
+            snapshot.forEach(childSnapshot => {
+                const childData = childSnapshot.val();
+                const row = activeCodesTable.insertRow();
+                row.insertCell(0).innerText = childData.code;
+                row.insertCell(1).innerText = childData.value;
+                row.insertCell(2).innerText = childData.multiUse ? 'Mehrfach verwendbar' : 'Einmal verwendbar';
+                const deleteButton = document.createElement('button');
+                deleteButton.innerText = 'Löschen';
+                deleteButton.className = 'remove-btn';
+                deleteButton.onclick = () => removeCode(childSnapshot.key);
+                const actionsCell = row.insertCell(3);
+                actionsCell.appendChild(deleteButton);
+            });
+        });
+    }
+
+    function removeCode(code) {
+        firebase.database().ref('codes/' + code).remove()
+            .then(() => {
+                alert('Code erfolgreich gelöscht!');
+                loadActiveCodes();
+            })
+            .catch(error => {
+                alert('Fehler beim Löschen des Codes: ' + error.message);
+            });
+    }
+
+    function loadLeaderboard() {
+        const leaderboardTable = document.getElementById('leaderboard').getElementsByTagName('tbody')[0];
+        leaderboardTable.innerHTML = '';
+
+        firebase.database().ref('leaderboard').once('value').then(snapshot => {
+            snapshot.forEach(childSnapshot => {
+                const childData = childSnapshot.val();
+                const row = leaderboardTable.insertRow();
+                row.insertCell(0).innerText = childSnapshot.key;
+                row.insertCell(1).innerText = childData.coins;
+            });
+        });
+    }
+
+    function generateRandomCode() {
+        return Math.random().toString(36).substr(2, 8).toUpperCase();
+    }
+
+    function login() {
+        const username = document.getElementById('adminUsername').value;
+        const password = document.getElementById('adminPassword').value;
+        const loginMessage = document.getElementById('loginMessage');
+        const adminPanel = document.getElementById('adminPanel');
+
+        // Füge hier die Logik zur Überprüfung des Benutzernamens und des Passworts hinzu
+        if (username === "admin" && password === "password") { // Beispielwerte
+            adminPanel.style.display = 'block';
+            loginMessage.style.display = 'none';
+        } else {
+            loginMessage.style.display = 'block';
+            loginMessage.innerText = 'Ungültiger Benutzername oder Passwort!';
+        }
+    }
 </script>
 
 </body>
-</html>
+    </html>
