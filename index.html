@@ -104,7 +104,7 @@
                 <thead>
                     <tr>
                         <th>Discord-Name</th>
-                        <th>Coins</th> <!-- Titel bleibt erhalten -->
+                        <th>Coins</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -159,48 +159,42 @@
     </footer>
 
     <script>
-        let codes = JSON.parse(localStorage.getItem('codes')) || {}; // Codes aus dem LocalStorage laden oder leere Liste
-        let users = JSON.parse(localStorage.getItem('users')) || {}; // Nutzer-Daten aus LocalStorage laden
-        let coinPrice = parseFloat(localStorage.getItem('coinPrice')) || 10.00; // Standardpreis ist 10.00 $, falls nicht gespeichert
-        let lastCodeTime = parseInt(localStorage.getItem('lastCodeTime')) || Date.now(); // Letzte Code-Zeit aus LocalStorage oder aktuelles Datum
+        let codes = JSON.parse(localStorage.getItem('codes')) || {};
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+        let coinPrice = parseFloat(localStorage.getItem('coinPrice')) || 10.00;
+        let lastCodeTime = parseInt(localStorage.getItem('lastCodeTime')) || Date.now();
 
         function submitCode() {
             const codeInput = document.getElementById("codeInput").value;
             const discordInput = document.getElementById("discordInput").value;
             const message = document.getElementById("message");
 
-            // Überprüfen, ob der eingegebene Code gültig ist und nur einmalig verwendet werden kann
             if (codeInput.length > 0 && codeInput.length <= 8 && codes[codeInput]) {
-                const coinValue = codes[codeInput]; // Wert des Codes abrufen
-                lastCodeTime = Date.now(); // Code-Eingabezeit aktualisieren
+                const coinValue = codes[codeInput];
+                lastCodeTime = Date.now();
 
-                // Erhöhe den Coin-Wert um 2% pro Code-Wert
                 coinPrice *= 1 + (0.02 * coinValue);
 
-                // Nutzer-Statistik aktualisieren
                 if (users[discordInput]) {
-                    users[discordInput] += coinValue; // Coins erhöhen, wenn Discord-Name schon existiert
+                    users[discordInput] += coinValue;
                 } else {
-                    users[discordInput] = coinValue; // Falls neuer Discord-Name, Coin-Wert setzen
+                    users[discordInput] = coinValue;
                 }
 
-                updateUI(discordInput, codeInput); // UI aktualisieren
+                updateUI(discordInput, codeInput);
                 message.textContent = "Code erfolgreich eingereicht!";
-                message.className = ""; // Fehlerklasse zurücksetzen
+                message.className = "";
 
-                // Code entfernen, um Mehrfacheinlösungen zu verhindern
                 delete codes[codeInput];
 
             } else {
                 message.textContent = "Ungültiger Code oder Discord-Name!";
-                message.className = "error-message"; // Fehlerklasse hinzufügen
+                message.className = "error-message";
             }
 
-            // Felder leeren
             document.getElementById("codeInput").value = "";
             document.getElementById("discordInput").value = "";
 
-            // Daten in LocalStorage speichern
             localStorage.setItem('codes', JSON.stringify(codes));
             localStorage.setItem('users', JSON.stringify(users));
             localStorage.setItem('coinPrice', coinPrice);
@@ -208,17 +202,15 @@
         }
 
         function updateUI(discordName, code) {
-            // Aktualisiere das Leaderboard
             const leaderboard = document.getElementById("leaderboard").getElementsByTagName('tbody')[0];
-            leaderboard.innerHTML = ""; // Tabelle leeren
+            leaderboard.innerHTML = "";
 
             for (const [name, coins] of Object.entries(users)) {
                 const newRow = leaderboard.insertRow();
                 newRow.insertCell(0).textContent = name;
-                newRow.insertCell(1).textContent = coins; // Coin-Wert im Leaderboard anzeigen
+                newRow.insertCell(1).textContent = coins;
             }
 
-            // Aktualisiere den Coin-Preis
             document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
         }
 
@@ -227,111 +219,106 @@
             const password = document.getElementById("adminPassword").value;
             const adminPanel = document.getElementById("adminPanel");
 
+            // Überprüfen, ob die Anmeldedaten korrekt sind
             if (username === "Dualis" && password === "28102006") {
-                adminPanel.style.display = "block";
-                updateAdminPanel(); // Admin-Panel aktualisieren
+                adminPanel.style.display = "block"; // Zeigt das Admin-Panel an
+                updateAdminPanel(); // Aktualisiert das Admin-Panel
             } else {
                 alert("Ungültige Anmeldeinformationen!");
             }
         }
 
-        // Funktion zum Hinzufügen neuer Codes im Admin-Panel
         function addCode() {
             const newCodeInput = document.getElementById("newCodeInput").value;
-            const coinValue = parseFloat(document.getElementByconst coinValue = parseFloat(document.getElementById("coinValue").value);
+            const coinValue = parseFloat(document.getElementById("coinValue").value);
 
             if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes[newCodeInput] && !isNaN(coinValue) && coinValue > 0) {
-                codes[newCodeInput] = coinValue; // Neuen Code mit Wert speichern
-                document.getElementById("newCodeInput").value = ""; // Eingabefeld leeren
-                document.getElementById("coinValue").value = ""; // Eingabefeld leeren
-                updateActiveCodes(); // Aktive Codes aktualisieren
+                codes[newCodeInput] = coinValue; 
+                document.getElementById("newCodeInput").value = ""; 
+                document.getElementById("coinValue").value = ""; 
+                updateActiveCodes(); 
                 alert("Code erfolgreich hinzugefügt!");
             } else {
                 alert("Ungültige Eingabe oder Code existiert bereits!");
             }
 
-            // Daten in LocalStorage speichern
             localStorage.setItem('codes', JSON.stringify(codes));
         }
 
         function updateAdminPanel() {
-            updateActiveCodes(); // Aktivierte Codes im Admin-Panel aktualisieren
+            updateActiveCodes(); 
         }
 
         function updateActiveCodes() {
             const activeCodesTable = document.getElementById("activeCodes").getElementsByTagName('tbody')[0];
-            activeCodesTable.innerHTML = ""; // Tabelle leeren
+            activefunction updateActiveCodes() {
+            const activeCodesTable = document.getElementById("activeCodes").getElementsByTagName('tbody')[0];
+            activeCodesTable.innerHTML = ""; // Leert die Tabelle, bevor neue Daten hinzugefügt werden
 
             for (const [code, value] of Object.entries(codes)) {
                 const newRow = activeCodesTable.insertRow();
                 newRow.insertCell(0).textContent = code;
-                newRow.insertCell(1).textContent = value; // Coin-Wert des Codes anzeigen
+                newRow.insertCell(1).textContent = value;
 
-                // Aktionen
-                const actionsCell = newRow.insertCell(2);
+                const deleteCell = newRow.insertCell(2);
                 const deleteButton = document.createElement("button");
-                deleteButton.textContent = "Löschen";
-                deleteButton.onclick = () => deleteCode(code); // Löschen-Funktion verknüpfen
-                actionsCell.appendChild(deleteButton);
+                deleteButton.textContent = "Entfernen";
+                deleteButton.onclick = function() {
+                    delete codes[code]; // Entfernt den Code aus dem Codes-Objekt
+                    localStorage.setItem('codes', JSON.stringify(codes)); // Speichert die Änderungen
+                    updateActiveCodes(); // Aktualisiert die Tabelle
+                };
+                deleteCell.appendChild(deleteButton);
             }
-        }
-
-        function deleteCode(code) {
-            if (codes[code]) {
-                delete codes[code]; // Code löschen
-                updateActiveCodes(); // Aktive Codes aktualisieren
-                alert("Code erfolgreich gelöscht!");
-            }
-            localStorage.setItem('codes', JSON.stringify(codes)); // Daten speichern
         }
 
         function changeCoinPrice() {
             const newPrice = parseFloat(document.getElementById("newCoinPrice").value);
             if (!isNaN(newPrice) && newPrice > 0) {
                 coinPrice = newPrice;
-                document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $"; // Preis im UI aktualisieren
-                localStorage.setItem('coinPrice', coinPrice); // Neuen Preis speichern
+                document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
+                localStorage.setItem('coinPrice', coinPrice); // Speichert den neuen Preis
+                document.getElementById("newCoinPrice").value = ""; // Leert das Eingabefeld
                 alert("Coin-Preis erfolgreich geändert!");
             } else {
                 alert("Ungültiger Preis!");
             }
-            document.getElementById("newCoinPrice").value = ""; // Eingabefeld leeren
         }
 
         function updateUserCoins() {
             const userDiscord = document.getElementById("userDiscord").value;
-            const coinChange = parseInt(document.getElementById("coinChange").value);
+            const coinChange = parseFloat(document.getElementById("coinChange").value);
 
-            if (users[userDiscord]) {
-                if (!isNaN(coinChange)) {
-                    users[userDiscord] += coinChange; // Coins hinzufügen oder entfernen
-                    updateUI(userDiscord); // UI aktualisieren
-                    alert("Coins erfolgreich aktualisiert!");
-                } else {
-                    alert("Ungültige Coin-Änderung!");
-                }
+            if (users[userDiscord] !== undefined && !isNaN(coinChange)) {
+                users[userDiscord] += coinChange;
+                localStorage.setItem('users', JSON.stringify(users)); // Speichert die Änderungen
+                updateUI(userDiscord); // Aktualisiert die Anzeige
+                alert("Coins erfolgreich aktualisiert!");
             } else {
-                alert("Nutzer existiert nicht!");
+                alert("Ungültiger Discord-Name oder Coins-Wert!");
             }
-            document.getElementById("userDiscord").value = ""; // Eingabefeld leeren
-            document.getElementById("coinChange").value = ""; // Eingabefeld leeren
-            localStorage.setItem('users', JSON.stringify(users)); // Daten speichern
         }
 
         function resetAll() {
             if (confirm("Sind Sie sicher, dass Sie alle Daten zurücksetzen möchten?")) {
-                codes = {}; // Codes zurücksetzen
-                users = {}; // Nutzer zurücksetzen
-                coinPrice = 10.00; // Standardpreis zurücksetzen
-                localStorage.clear(); // LocalStorage leeren
-                updateUI(); // UI zurücksetzen
+                localStorage.removeItem('codes');
+                localStorage.removeItem('users');
+                localStorage.removeItem('coinPrice');
+                localStorage.removeItem('lastCodeTime');
+                codes = {};
+                users = {};
+                coinPrice = 10.00;
+                lastCodeTime = Date.now();
+                updateUI();
+                updateActiveCodes();
+                document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
                 alert("Alle Daten wurden zurückgesetzt!");
             }
         }
 
-        // Initiales Update beim Laden der Seite
+        // Initiale UI-Aktualisierung
         updateUI();
-
+        updateActiveCodes();
     </script>
 </body>
 </html>
