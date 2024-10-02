@@ -121,10 +121,15 @@
 
             <div id="adminPanel" style="display:none;">
                 <h3>Admin-Panel</h3>
+                
+                <h4>Coin-Preis ändern:</h4>
+                <input type="number" id="newCoinPrice" placeholder="Neuer Preis" step="0.01">
+                <button onclick="changeCoinPrice()">Preis ändern</button>
+
+                <h4>Neuen Code hinzufügen:</h4>
                 <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
                 <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)">
                 <button onclick="addCode()">Code hinzufügen</button>
-                <div id="adminMessage" class="error-message"></div>
 
                 <h4>Coins verwalten:</h4>
                 <input type="text" id="userDiscord" placeholder="Discord-Name des Nutzers">
@@ -137,6 +142,7 @@
                         <tr>
                             <th>Code</th>
                             <th>Coin-Wert</th>
+                            <th>Aktionen</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -232,76 +238,100 @@
         // Funktion zum Hinzufügen neuer Codes im Admin-Panel
         function addCode() {
             const newCodeInput = document.getElementById("newCodeInput").value;
-            const coinValue = parseFloat(document.getElementById("coinValue").value);
-            const adminMessage = document.getElementById("adminMessage");
+            const coinValue = parseFloat(document.getElementByconst coinValue = parseFloat(document.getElementById("coinValue").value);
 
-            if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes[newCodeInput] && coinValue > 0) {
-                codes[newCodeInput] = coinValue; // Neuen Code und seinen Wert zur Liste hinzufügen
-                adminMessage.textContent = "Neuer Code erfolgreich hinzugefügt!";
-                adminMessage.className = ""; // Fehlerklasse zurücksetzen
-                updateAdminPanel(); // Admin-Panel
-            updateAdminPanel(); // Admin-Panel aktualisieren
+            if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes[newCodeInput] && !isNaN(coinValue) && coinValue > 0) {
+                codes[newCodeInput] = coinValue; // Neuen Code mit Wert speichern
+                document.getElementById("newCodeInput").value = ""; // Eingabefeld leeren
+                document.getElementById("coinValue").value = ""; // Eingabefeld leeren
+                updateActiveCodes(); // Aktive Codes aktualisieren
+                alert("Code erfolgreich hinzugefügt!");
             } else {
-                adminMessage.textContent = "Ungültiger Code oder bereits vorhanden!";
-                adminMessage.className = "error-message"; // Fehlerklasse hinzufügen
+                alert("Ungültige Eingabe oder Code existiert bereits!");
             }
 
-            // Felder leeren
-            document.getElementById("newCodeInput").value = "";
-            document.getElementById("coinValue").value = "";
-            
             // Daten in LocalStorage speichern
             localStorage.setItem('codes', JSON.stringify(codes));
         }
 
-        // Funktion zum Aktualisieren des Admin-Panels
         function updateAdminPanel() {
+            updateActiveCodes(); // Aktivierte Codes im Admin-Panel aktualisieren
+        }
+
+        function updateActiveCodes() {
             const activeCodesTable = document.getElementById("activeCodes").getElementsByTagName('tbody')[0];
             activeCodesTable.innerHTML = ""; // Tabelle leeren
 
             for (const [code, value] of Object.entries(codes)) {
                 const newRow = activeCodesTable.insertRow();
                 newRow.insertCell(0).textContent = code;
-                newRow.insertCell(1).textContent = value; // Coin-Wert im aktiven Codes anzeigen
+                newRow.insertCell(1).textContent = value; // Coin-Wert des Codes anzeigen
+
+                // Aktionen
+                const actionsCell = newRow.insertCell(2);
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Löschen";
+                deleteButton.onclick = () => deleteCode(code); // Löschen-Funktion verknüpfen
+                actionsCell.appendChild(deleteButton);
             }
         }
 
-        // Funktion zum Aktualisieren der Coins eines Nutzers
-        function updateUserCoins() {
-            const discordName = document.getElementById("userDiscord").value;
-            const coinChange = parseFloat(document.getElementById("coinChange").value);
-            const adminMessage = document.getElementById("adminMessage");
+        function deleteCode(code) {
+            if (codes[code]) {
+                delete codes[code]; // Code löschen
+                updateActiveCodes(); // Aktive Codes aktualisieren
+                alert("Code erfolgreich gelöscht!");
+            }
+            localStorage.setItem('codes', JSON.stringify(codes)); // Daten speichern
+        }
 
-            if (users[discordName] !== undefined && !isNaN(coinChange)) {
-                users[discordName] += coinChange; // Coins erhöhen oder reduzieren
-                adminMessage.textContent = "Coins erfolgreich aktualisiert!";
-                adminMessage.className = ""; // Fehlerklasse zurücksetzen
-                updateUI(discordName); // UI aktualisieren
+        function changeCoinPrice() {
+            const newPrice = parseFloat(document.getElementById("newCoinPrice").value);
+            if (!isNaN(newPrice) && newPrice > 0) {
+                coinPrice = newPrice;
+                document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $"; // Preis im UI aktualisieren
+                localStorage.setItem('coinPrice', coinPrice); // Neuen Preis speichern
+                alert("Coin-Preis erfolgreich geändert!");
             } else {
-                adminMessage.textContent = "Nutzer nicht gefunden oder ungültiger Wert!";
-                adminMessage.className = "error-message"; // Fehlerklasse hinzufügen
+                alert("Ungültiger Preis!");
             }
-
-            // Felder leeren
-            document.getElementById("userDiscord").value = "";
-            document.getElementById("coinChange").value = "";
-
-            // Daten in LocalStorage speichern
-            localStorage.setItem('users', JSON.stringify(users));
+            document.getElementById("newCoinPrice").value = ""; // Eingabefeld leeren
         }
 
-        // Funktion zum Zurücksetzen aller Daten
+        function updateUserCoins() {
+            const userDiscord = document.getElementById("userDiscord").value;
+            const coinChange = parseInt(document.getElementById("coinChange").value);
+
+            if (users[userDiscord]) {
+                if (!isNaN(coinChange)) {
+                    users[userDiscord] += coinChange; // Coins hinzufügen oder entfernen
+                    updateUI(userDiscord); // UI aktualisieren
+                    alert("Coins erfolgreich aktualisiert!");
+                } else {
+                    alert("Ungültige Coin-Änderung!");
+                }
+            } else {
+                alert("Nutzer existiert nicht!");
+            }
+            document.getElementById("userDiscord").value = ""; // Eingabefeld leeren
+            document.getElementById("coinChange").value = ""; // Eingabefeld leeren
+            localStorage.setItem('users', JSON.stringify(users)); // Daten speichern
+        }
+
         function resetAll() {
             if (confirm("Sind Sie sicher, dass Sie alle Daten zurücksetzen möchten?")) {
-                codes = {};
-                users = {};
-                coinPrice = 10.00; // Zurücksetzen auf den Standardpreis
-                localStorage.clear(); // Alle Daten aus dem LocalStorage löschen
-                updateUI(); // UI aktualisieren
-                updateAdminPanel(); // Admin-Panel aktualisieren
-                alert("Alle Daten wurden zurückgesetzt.");
+                codes = {}; // Codes zurücksetzen
+                users = {}; // Nutzer zurücksetzen
+                coinPrice = 10.00; // Standardpreis zurücksetzen
+                localStorage.clear(); // LocalStorage leeren
+                updateUI(); // UI zurücksetzen
+                alert("Alle Daten wurden zurückgesetzt!");
             }
         }
+
+        // Initiales Update beim Laden der Seite
+        updateUI();
+
     </script>
 </body>
 </html>
