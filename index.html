@@ -4,7 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dual-Coin</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Verlinkung zur CSS-Datei -->
+    <style>
+        /* Beispiel CSS */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        header, footer {
+            text-align: center;
+            background-color: #4CAF50; /* Grüner Hintergrund */
+            color: white;
+            padding: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #4CAF50; /* Grüner Hintergrund */
+            color: white;
+        }
+        .error-message {
+            color: red;
+        }
+        .success-message {
+            color: green;
+        }
+    </style>
     <!-- Firebase SDKs einfügen -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
@@ -45,12 +78,9 @@
             <input type="text" id="adminUsername" placeholder="Benutzername">
             <input type="password" id="adminPassword" placeholder="Passwort">
             <button onclick="login()">Einloggen</button>
-
             <div id="loginMessage"></div> <!-- Hier wird die Erfolgs- oder Fehlermeldung angezeigt -->
-
             <div id="adminPanel" style="display:none;">
                 <h3>Admin-Panel</h3>
-                
                 <h4>Coin-Preis ändern:</h4>
                 <input type="number" id="newCoinPrice" placeholder="Neuer Preis" step="0.01">
                 <button onclick="changeCoinPrice()">Preis ändern</button>
@@ -87,6 +117,110 @@
         <p>&copy; 2024 Dual-Coin. Alle Rechte vorbehalten.</p>
     </footer>
 
-    <script src="script.js"></script>
+    <script>
+        // Firebase-Konfiguration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
+            authDomain: "dualis-company-chain.firebaseapp.com",
+            databaseURL: "https://dualis-company-chain-default-rtdb.firebaseio.com",
+            projectId: "dualis-company-chain",
+            storageBucket: "dualis-company-chain.appspot.com",
+            messagingSenderId: "521000433736",
+            appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d",
+            measurementId: "G-JEYQSXL8Z9"
+        };
+
+        // Firebase initialisieren
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        function submitCode() {
+            const discordName = document.getElementById('discordInput').value;
+            const code = document.getElementById('codeInput').value;
+            const coinPrice = parseFloat(document.getElementById('coinPrice').innerText.replace('$', ''));
+
+            if (!discordName || !code) {
+                displayMessage('Bitte alle Felder ausfüllen!', true);
+                return;
+            }
+
+            const codesRef = database.ref('activeCodes/');
+            codesRef.once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const activeCodes = snapshot.val();
+                    if (activeCodes[code]) {
+                        const coinValue = activeCodes[code];
+                        updateUserCoins(discordName, coinValue);
+                        displayMessage('Code erfolgreich eingereicht!');
+                    } else {
+                        displayMessage('Ungültiger Code!', true);
+                    }
+                } else {
+                    displayMessage('Keine aktiven Codes gefunden!', true);
+                }
+            }).catch((error) => {
+                console.error("Fehler beim Abrufen der Codes: ", error);
+                displayMessage('Fehler beim Abrufen der Codes!', true);
+            });
+        }
+
+        function displayMessage(msg, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = msg;
+            messageDiv.className = isError ? 'error-message' : 'success-message';
+        }
+
+        function login() {
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+
+            if (username === "admin" && password === "passwort123") {
+                document.getElementById('adminPanel').style.display = 'block';
+                document.getElementById('loginMessage').textContent = 'Erfolgreich eingeloggt!';
+            } else {
+                document.getElementById('loginMessage').textContent = 'Falscher Benutzername oder Passwort!';
+            }
+        }
+
+        function changeCoinPrice() {
+            const newPrice = parseFloat(document.getElementById('newCoinPrice').value);
+            if (isNaN(newPrice) || newPrice <= 0) {
+                alert('Bitte geben Sie einen gültigen Preis ein!');
+                return;
+            }
+            database.ref('coinPrice').set(newPrice).then(() => {
+                document.getElementById('coinPrice').innerText = newPrice.toFixed(2) + ' $';
+                alert('Preis erfolgreich geändert!');
+            }).catch((error) => {
+                console.error("Fehler beim Ändern des Preises: ", error);
+            });
+        }
+
+        function addCode() {
+            const newCode = document.getElementById('newCodeInput').value;
+            const coinValue = parseInt(document.getElementById('coinValue').value);
+
+            if (!newCode || isNaN(coinValue) || coinValue <= 0) {
+                alert('Bitte gültige Werte für Code und Coin-Wert eingeben!');
+                return;
+            }
+
+            database.ref('activeCodes/' + newCode).set(coinValue).then(() => {
+                alert('Code erfolgreich hinzugefügt!');
+            }).catch((error) => {
+                console.error("Fehler beim Hinzufügen des Codes: ", error);
+            });
+        }
+
+        function updateUserCoins(discordName, coinValue) {
+            // Logik zum Aktualisieren der Coins eines Benutzers
+            alert(discordName + ' hat ' + coinValue + ' Coins erhalten!');
+        }
+
+        function resetAll() {
+            // Hier kannst du die Logik zum Zurücksetzen aller Daten implementieren
+            alert('Alle Daten wurden zurückgesetzt!');
+        }
+    </script>
 </body>
 </html>
