@@ -1,9 +1,24 @@
 // script.js
 
-let codes = JSON.parse(localStorage.getItem('codes')) || {};
-let users = JSON.parse(localStorage.getItem('users')) || {};
-let coinPrice = parseFloat(localStorage.getItem('coinPrice')) || 10.00;
-let lastCodeTime = parseInt(localStorage.getItem('lastCodeTime')) || Date.now();
+const API_URL = 'https://dein-server.com/api';  // Setze hier die URL deiner API ein
+
+let coinPrice = 10.00;
+let codes = {};
+let users = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Daten vom Server abrufen
+    fetch(`${API_URL}/get-data`)
+        .then(response => response.json())
+        .then(data => {
+            coinPrice = data.coinPrice;
+            codes = data.codes;
+            users = data.users;
+            updateUI();
+            updateAdminPanel();
+        })
+        .catch(err => console.error("Fehler beim Laden der Daten:", err));
+});
 
 function submitCode() {
     const codeInput = document.getElementById("codeInput").value;
@@ -12,8 +27,6 @@ function submitCode() {
 
     if (codeInput.length > 0 && codeInput.length <= 8 && codes[codeInput]) {
         const coinValue = codes[codeInput];
-        lastCodeTime = Date.now();
-
         coinPrice *= 1 + (0.02 * coinValue);
 
         if (users[discordInput]) {
@@ -22,12 +35,14 @@ function submitCode() {
             users[discordInput] = coinValue;
         }
 
-        updateUI(discordInput, codeInput);
+        updateUI();
         message.textContent = "Code erfolgreich eingereicht!";
         message.className = "";
 
         delete codes[codeInput];
 
+        // Daten an den Server senden
+        saveData();
     } else {
         message.textContent = "Ungültiger Code oder Discord-Name!";
         message.className = "error-message";
@@ -35,14 +50,9 @@ function submitCode() {
 
     document.getElementById("codeInput").value = "";
     document.getElementById("discordInput").value = "";
-
-    localStorage.setItem('codes', JSON.stringify(codes));
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('coinPrice', coinPrice);
-    localStorage.setItem('lastCodeTime', lastCodeTime);
 }
 
-function updateUI(discordName, code) {
+function updateUI() {
     const leaderboard = document.getElementById("leaderboard").getElementsByTagName('tbody')[0];
     leaderboard.innerHTML = "";
 
@@ -64,21 +74,11 @@ function login() {
     // Überprüfen, ob die Anmeldedaten korrekt sind
     if (username === "Dualis" && password === "28102006") {
         adminPanel.style.display = "block"; // Zeigt das Admin-Panel an
-        updateAdminPanel(); // Aktualisiert das Admin-Panel
         loginMessage.textContent = "Erfolgreich eingeloggt!";
         loginMessage.className = "success-message"; // Erfolgsnachricht
     } else {
         loginMessage.textContent = "Ungültige Anmeldeinformationen!";
         loginMessage.className = "error-message"; // Fehlermeldung
-    }
-}
-
-function changeCoinPrice() {
-    const newPrice = parseFloat(document.getElementById("newCoinPrice").value);
-    if (!isNaN(newPrice)) {
-        coinPrice = newPrice;
-        document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
-        localStorage.setItem('coinPrice', coinPrice);
     }
 }
 
@@ -88,23 +88,8 @@ function addCode() {
 
     if (newCodeInput && coinValue > 0) {
         codes[newCodeInput] = coinValue;
-        localStorage.setItem('codes', JSON.stringify(codes));
         updateAdminPanel();
-    }
-}
-
-function updateUserCoins() {
-    const discordName = document.getElementById("userDiscord").value;
-    const coinChange = parseFloat(document.getElementById("coinChange").value);
-
-    if (discordName && !isNaN(coinChange)) {
-        if (users[discordName]) {
-            users[discordName] += coinChange;
-        } else {
-            users[discordName] = coinChange;
-        }
-        localStorage.setItem('users', JSON.stringify(users));
-        updateUI();
+        saveData();
     }
 }
 
@@ -123,15 +108,42 @@ function updateAdminPanel() {
 
 function deleteCode(code) {
     delete codes[code];
-    localStorage.setItem('codes', JSON.stringify(codes));
     updateAdminPanel();
+    saveData();
+}
+
+function updateUserCoins() {
+    const discordName = document.getElementById("userDiscord").value;
+    const coinChange = parseFloat(document.getElementById("coinChange").value);
+
+    if (discordName && !isNaN(coinChange)) {
+        if (users[discordName]) {
+            users[discordName] += coinChange;
+        } else {
+            users[discordName] = coinChange;
+        }
+        updateUI();
+        saveData();
+    }
+}
+
+function saveData() {
+    // Daten an den Server senden, um sie persistent zu speichern
+    fetch(`${API_URL}/save-data`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coinPrice, codes, users })
+    })
+    .then(response => response.json())
+    .then(data => console.log('Daten erfolgreich gespeichert:', data))
+    .catch(err => console.error('Fehler beim Speichern der Daten:', err));
 }
 
 function resetAll() {
     codes = {};
     users = {};
     coinPrice = 10.00;
-    localStorage.clear();
     updateAdminPanel();
     updateUI();
+    saveData();
 }
