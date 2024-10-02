@@ -4,84 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dual-Coin</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-
-        header {
-            text-align: center;
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 0;
-        }
-
-        h1, h2 {
-            margin: 0;
-        }
-
-        section {
-            margin: 20px 0;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        input[type="text"], input[type="password"], input[type="number"] {
-            width: 200px;
-            padding: 10px;
-            margin: 10px 0;
-        }
-
-        button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            border: 1px solid #dddddd;
-            text-align: left;
-            padding: 8px;
-        }
-
-        th {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .error-message {
-            color: red;
-            font-weight: bold;
-        }
-
-        @media (max-width: 600px) {
-            input[type="text"], input[type="password"], button {
-                width: 100%;
-                margin: 10px 0;
-            }
-
-            section {
-                padding: 10px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css"> <!-- Verlinkung zur CSS-Datei -->
 </head>
 <body>
     <header>
@@ -118,6 +41,8 @@
             <input type="text" id="adminUsername" placeholder="Benutzername">
             <input type="password" id="adminPassword" placeholder="Passwort">
             <button onclick="login()">Einloggen</button>
+
+            <div id="loginMessage"></div> <!-- Hier wird die Erfolgs- oder Fehlermeldung angezeigt -->
 
             <div id="adminPanel" style="display:none;">
                 <h3>Admin-Panel</h3>
@@ -218,42 +143,60 @@
             const username = document.getElementById("adminUsername").value;
             const password = document.getElementById("adminPassword").value;
             const adminPanel = document.getElementById("adminPanel");
+            const loginMessage = document.getElementById("loginMessage");
 
             // Überprüfen, ob die Anmeldedaten korrekt sind
             if (username === "Dualis" && password === "28102006") {
                 adminPanel.style.display = "block"; // Zeigt das Admin-Panel an
                 updateAdminPanel(); // Aktualisiert das Admin-Panel
+                loginMessage.textContent = "Erfolgreich eingeloggt!";
+                loginMessage.className = "success-message"; // Erfolgsnachricht
             } else {
-                alert("Ungültige Anmeldeinformationen!");
+                loginMessage.textContent = "Ungültige Anmeldeinformationen!";
+                loginMessage.className = "error-message"; // Fehlermeldung
             }
         }
 
         function addCode() {
             const newCodeInput = document.getElementById("newCodeInput").value;
-            const coinValue = parseFloat(document.getElementById("coinValue").value);
+            const coinValue = parseFloat(document.getElementById("coinValue").const coinValue = parseFloat(document.getElementById("coinValue").value);
+            const activeCodesTable = document.getElementById("activeCodes").getElementsByTagName('tbody')[0];
+            const message = document.getElementById("loginMessage");
 
-            if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes[newCodeInput] && !isNaN(coinValue) && coinValue > 0) {
-                codes[newCodeInput] = coinValue; 
-                document.getElementById("newCodeInput").value = ""; 
-                document.getElementById("coinValue").value = ""; 
-                updateActiveCodes(); 
-                alert("Code erfolgreich hinzugefügt!");
+            if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes[newCodeInput] && !isNaN(coinValue)) {
+                codes[newCodeInput] = coinValue; // Füge den neuen Code hinzu
+                const newRow = activeCodesTable.insertRow();
+                newRow.insertCell(0).textContent = newCodeInput;
+                newRow.insertCell(1).textContent = coinValue;
+                const deleteCell = newRow.insertCell(2);
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Löschen";
+                deleteButton.onclick = () => deleteCode(newCodeInput);
+                deleteCell.appendChild(deleteButton);
+
+                message.textContent = "Code erfolgreich hinzugefügt!";
+                message.className = "success-message";
+
+                localStorage.setItem('codes', JSON.stringify(codes)); // Speichere Codes im Local Storage
             } else {
-                alert("Ungültige Eingabe oder Code existiert bereits!");
+                message.textContent = "Ungültiger Code oder Wert!";
+                message.className = "error-message";
             }
 
-            localStorage.setItem('codes', JSON.stringify(codes));
+            document.getElementById("newCodeInput").value = "";
+            document.getElementById("coinValue").value = "";
+            updateAdminPanel(); // Aktualisiere die Anzeige der aktiven Codes
+        }
+
+        function deleteCode(code) {
+            delete codes[code]; // Entferne den Code aus dem Speicher
+            updateAdminPanel(); // Aktualisiere das Admin-Panel
+            localStorage.setItem('codes', JSON.stringify(codes)); // Speichere die aktualisierten Codes
         }
 
         function updateAdminPanel() {
-            updateActiveCodes(); 
-        }
-
-        function updateActiveCodes() {
             const activeCodesTable = document.getElementById("activeCodes").getElementsByTagName('tbody')[0];
-            activefunction updateActiveCodes() {
-            const activeCodesTable = document.getElementById("activeCodes").getElementsByTagName('tbody')[0];
-            activeCodesTable.innerHTML = ""; // Leert die Tabelle, bevor neue Daten hinzugefügt werden
+            activeCodesTable.innerHTML = ""; // Leere die Tabelle
 
             for (const [code, value] of Object.entries(codes)) {
                 const newRow = activeCodesTable.insertRow();
@@ -262,63 +205,68 @@
 
                 const deleteCell = newRow.insertCell(2);
                 const deleteButton = document.createElement("button");
-                deleteButton.textContent = "Entfernen";
-                deleteButton.onclick = function() {
-                    delete codes[code]; // Entfernt den Code aus dem Codes-Objekt
-                    localStorage.setItem('codes', JSON.stringify(codes)); // Speichert die Änderungen
-                    updateActiveCodes(); // Aktualisiert die Tabelle
-                };
+                deleteButton.textContent = "Löschen";
+                deleteButton.onclick = () => deleteCode(code);
                 deleteCell.appendChild(deleteButton);
             }
         }
 
         function changeCoinPrice() {
             const newPrice = parseFloat(document.getElementById("newCoinPrice").value);
+            const message = document.getElementById("loginMessage");
+
             if (!isNaN(newPrice) && newPrice > 0) {
-                coinPrice = newPrice;
+                coinPrice = newPrice; // Setze den neuen Preis
+                localStorage.setItem('coinPrice', coinPrice); // Speichere den neuen Preis
                 document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
-                localStorage.setItem('coinPrice', coinPrice); // Speichert den neuen Preis
-                document.getElementById("newCoinPrice").value = ""; // Leert das Eingabefeld
-                alert("Coin-Preis erfolgreich geändert!");
+                message.textContent = "Coin-Preis erfolgreich geändert!";
+                message.className = "success-message";
             } else {
-                alert("Ungültiger Preis!");
+                message.textContent = "Ungültiger Preis!";
+                message.className = "error-message";
             }
+            document.getElementById("newCoinPrice").value = ""; // Leere das Eingabefeld
         }
 
         function updateUserCoins() {
-            const userDiscord = document.getElementById("userDiscord").value;
-            const coinChange = parseFloat(document.getElementById("coinChange").value);
+            const discordName = document.getElementById("userDiscord").value;
+            const coinChange = parseInt(document.getElementById("coinChange").value);
+            const message = document.getElementById("loginMessage");
 
-            if (users[userDiscord] !== undefined && !isNaN(coinChange)) {
-                users[userDiscord] += coinChange;
-                localStorage.setItem('users', JSON.stringify(users)); // Speichert die Änderungen
-                updateUI(userDiscord); // Aktualisiert die Anzeige
-                alert("Coins erfolgreich aktualisiert!");
+            if (users[discordName] && !isNaN(coinChange)) {
+                users[discordName] += coinChange; // Aktualisiere die Coins des Nutzers
+                localStorage.setItem('users', JSON.stringify(users)); // Speichere die aktualisierten Nutzer
+                updateUI(); // Aktualisiere die Anzeige
+                message.textContent = "Coins erfolgreich aktualisiert!";
+                message.className = "success-message";
             } else {
-                alert("Ungültiger Discord-Name oder Coins-Wert!");
+                message.textContent = "Ungültiger Nutzer oder Coin-Wert!";
+                message.className = "error-message";
             }
+            document.getElementById("userDiscord").value = ""; // Leere das Eingabefeld
+            document.getElementById("coinChange").value = ""; // Leere das Eingabefeld
         }
 
         function resetAll() {
             if (confirm("Sind Sie sicher, dass Sie alle Daten zurücksetzen möchten?")) {
-                localStorage.removeItem('codes');
-                localStorage.removeItem('users');
-                localStorage.removeItem('coinPrice');
-                localStorage.removeItem('lastCodeTime');
+                localStorage.removeItem('codes'); // Lösche alle Codes
+                localStorage.removeItem('users'); // Lösche alle Nutzer
+                localStorage.removeItem('coinPrice'); // Lösche den Coin-Preis
                 codes = {};
                 users = {};
-                coinPrice = 10.00;
-                lastCodeTime = Date.now();
-                updateUI();
-                updateActiveCodes();
-                document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
-                alert("Alle Daten wurden zurückgesetzt!");
+                coinPrice = 10.00; // Setze den Preis auf den Standardwert zurück
+                localStorage.setItem('coinPrice', coinPrice);
+                updateUI(); // Aktualisiere die UI
+                updateAdminPanel(); // Aktualisiere das Admin-Panel
+                document.getElementById("loginMessage").textContent = "Alle Daten wurden zurückgesetzt.";
+                document.getElementById("loginMessage").className = "success-message";
             }
         }
 
-        // Initiale UI-Aktualisierung
+        // Initialisiere die UI beim Laden der Seite
         updateUI();
-        updateActiveCodes();
+        updateAdminPanel();
+
     </script>
 </body>
 </html>
