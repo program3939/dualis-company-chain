@@ -1,54 +1,44 @@
+// Importiere die benötigten Funktionen von Firebase
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set, get, onValue } from "firebase/database";
+
 // Firebase-Konfiguration
 const firebaseConfig = {
-    apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
-    authDomain: "dualis-company-chain.firebaseapp.com",
-    databaseURL: "https://dualis-company-chain-default-rtdb.firebaseio.com",
-    projectId: "dualis-company-chain",
-    storageBucket: "dualis-company-chain.appspot.com",
-    messagingSenderId: "521000433736",
-    appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d",
-    measurementId: "G-JEYQSXL8Z9"
+  apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
+  authDomain: "dualis-company-chain.firebaseapp.com",
+  databaseURL: "https://dualis-company-chain-default-rtdb.firebaseio.com",
+  projectId: "dualis-company-chain",
+  storageBucket: "dualis-company-chain.appspot.com",
+  messagingSenderId: "521000433736",
+  appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d",
+  measurementId: "G-JEYQSXL8Z9"
 };
 
 // Firebase initialisieren
-const app = firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
 
-// Globale Variablen
+// Variablen
 let codes = {};
 let users = {};
 let coinPrice = 10.00;
 
-// Führt den Code aus, um die Daten aus Firebase zu laden
-window.onload = function() {
-    loadData();
-}
+// Synchronisation der Daten
+onValue(ref(database, 'codes'), (snapshot) => {
+  codes = snapshot.val() || {};
+});
 
-// Daten aus Firebase laden
-function loadData() {
-    // Leaderboard-Daten laden
-    const usersRef = database.ref('users');
-    usersRef.on('value', (snapshot) => {
-        users = snapshot.val() || {};
-        updateLeaderboard();
-    });
+onValue(ref(database, 'users'), (snapshot) => {
+  users = snapshot.val() || {};
+  updateUI();
+});
 
-    // Codes laden
-    const codesRef = database.ref('codes');
-    codesRef.on('value', (snapshot) => {
-        codes = snapshot.val() || {};
-        updateActiveCodes();
-    });
+onValue(ref(database, 'coinPrice'), (snapshot) => {
+  coinPrice = snapshot.val() || 10.00;
+  document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
+});
 
-    // Coin-Preis laden
-    const priceRef = database.ref('coinPrice');
-    priceRef.on('value', (snapshot) => {
-        coinPrice = snapshot.val() || 10.00;
-        document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
-    });
-}
-
-// Code einreichen
+// Funktionen
 function submitCode() {
     const codeInput = document.getElementById("codeInput").value;
     const discordInput = document.getElementById("discordInput").value;
@@ -56,6 +46,7 @@ function submitCode() {
 
     if (codeInput.length > 0 && codeInput.length <= 8 && codes[codeInput]) {
         const coinValue = codes[codeInput];
+        coinPrice *= 1 + (0.02 * coinValue);
 
         if (users[discordInput]) {
             users[discordInput] += coinValue;
@@ -63,19 +54,13 @@ function submitCode() {
             users[discordInput] = coinValue;
         }
 
-        // Update Coin-Preis
-        coinPrice *= 1 + (0.02 * coinValue);
-
-        // Speichern der Änderungen in Firebase
-        database.ref('users').set(users);
-        database.ref('coinPrice').set(coinPrice);
-        delete codes[codeInput];
-        database.ref('codes').set(codes);
-
         message.textContent = "Code erfolgreich eingereicht!";
         message.className = "";
 
-        updateUI(discordInput, codeInput);
+        delete codes[codeInput];
+
+        // Firebase Daten aktualisieren
+        updateDatabase();
     } else {
         message.textContent = "Ungültiger Code oder Discord-Name!";
         message.className = "error-message";
@@ -85,14 +70,13 @@ function submitCode() {
     document.getElementById("discordInput").value = "";
 }
 
-// UI aktualisieren
-function updateUI(discordName, code) {
-    updateLeaderboard();
-    document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
+function updateDatabase() {
+    set(ref(database, 'codes'), codes);
+    set(ref(database, 'users'), users);
+    set(ref(database, 'coinPrice'), coinPrice);
 }
 
-// Leaderboard aktualisieren
-function updateLeaderboard() {
+function updateUI() {
     const leaderboard = document.getElementById("leaderboard").getElementsByTagName('tbody')[0];
     leaderboard.innerHTML = "";
 
@@ -101,87 +85,53 @@ function updateLeaderboard() {
         newRow.insertCell(0).textContent = name;
         newRow.insertCell(1).textContent = coins;
     }
+
+    document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
 }
 
-// Admin-Login
 function login() {
     const username = document.getElementById("adminUsername").value;
     const password = document.getElementById("adminPassword").value;
     const adminPanel = document.getElementById("adminPanel");
     const loginMessage = document.getElementById("loginMessage");
 
+    // Überprüfen, ob die Anmeldedaten korrekt sind
     if (username === "Dualis" && password === "28102006") {
-        adminPanel.style.display = "block"; 
-        updateAdminPanel();
+        adminPanel.style.display = "block"; // Zeigt das Admin-Panel an
         loginMessage.textContent = "Erfolgreich eingeloggt!";
-        loginMessage.className = "success-message"; 
+        loginMessage.className = "success-message"; // Erfolgsnachricht
     } else {
         loginMessage.textContent = "Ungültige Anmeldeinformationen!";
-        loginMessage.className = "error-message"; 
+        loginMessage.className = "error-message"; // Fehlermeldung
     }
 }
 
-// Neuen Code hinzufügen
-function addCode() {
-    const newCodeInput = document.getElementById("newCodeInput").value;
-    const coinValue = parseFloat(document.getElementById("coinValue").value);
-    if (newCodeInput && coinValue > 0) {
-        codes[newCodeInput] = coinValue;
-        database.ref('codes').set(codes);
-        updateActiveCodes();
-        document.getElementById("newCodeInput").value = "";
-        document.getElementById("coinValue").value = "";
-    }
-}
-
-// Aktive Codes aktualisieren
-function updateActiveCodes() {
-    const activeCodesTable = document.getElementById("activeCodes").getElementsByTagName('tbody')[0];
-    activeCodesTable.innerHTML = "";
-
-    for (const [code, value] of Object.entries(codes)) {
-        const newRow = activeCodesTable.insertRow();
-        newRow.insertCell(0).textContent = code;
-        newRow.insertCell(1).textContent = value;
-        const actionCell = newRow.insertCell(2);
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = "Löschen";
-        deleteButton.onclick = () => {
-            delete codes[code];
-            database.ref('codes').set(codes);
-            updateActiveCodes();
-        };
-        actionCell.appendChild(deleteButton);
-    }
-}
-
-// Coin-Preis ändern
 function changeCoinPrice() {
     const newPrice = parseFloat(document.getElementById("newCoinPrice").value);
-    if (newPrice > 0) {
+    if (!isNaN(newPrice)) {
         coinPrice = newPrice;
-        database.ref('coinPrice').set(coinPrice);
-        document.getElementById("newCoinPrice").value = "";
+        updateDatabase();
     }
 }
 
-// Benutzer-Coins aktualisieren
+function addCode() {
+    const newCode = document.getElementById("newCodeInput").value;
+    const value = parseInt(document.getElementById("coinValue").value);
+    if (newCode.length <= 8 && !codes[newCode] && value > 0) {
+        codes[newCode] = value;
+        updateDatabase();
+    }
+}
+
 function updateUserCoins() {
-    const discordName = document.getElementById("userDiscord").value;
+    const userDiscord = document.getElementById("userDiscord").value;
     const coinChange = parseInt(document.getElementById("coinChange").value);
-
-    if (users[discordName] && coinChange) {
-        users[discordName] += coinChange;
-        database.ref('users').set(users);
-        updateLeaderboard();
-        document.getElementById("userDiscord").value = "";
-        document.getElementById("coinChange").value = "";
+    if (users[userDiscord] !== undefined) {
+        users[userDiscord] += coinChange;
+        updateDatabase();
     }
 }
 
-// Alle Daten zurücksetzen
 function resetAll() {
-    database.ref('users').set({});
-    database.ref('codes').set({});
-    database.ref('coinPrice').set(10.00);
+    // Hier kannst du die Logik für das Zurücksetzen aller Daten implementieren
 }
