@@ -214,7 +214,10 @@
             <input type="number" id="newCoinPrice" placeholder="Neuer Preis" step="0.01">
             <button onclick="changeCoinPrice()">Preis ändern</button>
             <h4>Neuen Code generieren:</h4>
-            <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
+            <label>
+                <input type="checkbox" id="randomCodeCheckbox"> Zufälligen 8-stelligen Code generieren
+            </label>
+            <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code (oder leer lassen)">
             <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)">
             <button onclick="generateCode()">Code generieren</button>
             <h4>Aktive Codes:</h4>
@@ -275,8 +278,7 @@
 
         if (!discordName || !code) {
             message.style.display = 'block';
-            message.className = 'error-message';
-            message.innerText = 'Bitte alle Felder ausfüllen!';
+            message.innerText = 'Bitte beide Felder ausfüllen!';
             return;
         }
 
@@ -284,18 +286,30 @@
         codeRef.once('value').then((snapshot) => {
             if (snapshot.exists()) {
                 const coinValue = snapshot.val();
-                alert(`Code akzeptiert! Du hast ${coinValue} Coins erhalten.`);
+                animateCoins(coinValue);
                 updateLeaderboard(discordName, coinValue);
             } else {
                 message.style.display = 'block';
-                message.className = 'error-message';
                 message.innerText = 'Ungültiger Code!';
             }
         }).catch((error) => {
             message.style.display = 'block';
-            message.className = 'error-message';
             message.innerText = 'Fehler bei der Überprüfung des Codes: ' + error.message;
         });
+    }
+
+    function animateCoins(amount) {
+        let currentAmount = 0;
+        const targetAmount = amount;
+
+        const interval = setInterval(() => {
+            if (currentAmount < targetAmount) {
+                currentAmount++;
+                document.getElementById('message').innerText = `Du hast ${currentAmount} Coins erhalten.`;
+            } else {
+                clearInterval(interval);
+            }
+        }, 5000 / targetAmount); // Animation über 5 Sekunden
     }
 
     function updateLeaderboard(discordName, coins) {
@@ -332,8 +346,14 @@
     }
 
     function generateCode() {
-        const newCode = document.getElementById('newCodeInput').value;
+        let newCode = document.getElementById('newCodeInput').value;
         const coinValue = document.getElementById('coinValue').value;
+        const randomCodeCheckbox = document.getElementById('randomCodeCheckbox');
+
+        if (randomCodeCheckbox.checked) {
+            newCode = generateRandomCode();
+            document.getElementById('newCodeInput').value = newCode; // Setze den generierten Code ins Eingabefeld
+        }
 
         if (!newCode || !coinValue) {
             alert('Bitte alle Felder ausfüllen!');
@@ -349,6 +369,10 @@
             .catch((error) => {
                 alert('Fehler beim Generieren des Codes: ' + error.message);
             });
+    }
+
+    function generateRandomCode() {
+        return Math.random().toString(36).substring(2, 10).toUpperCase(); // 8-stelliger zufälliger Code
     }
 
     function loadActiveCodes() {
@@ -389,12 +413,29 @@
     function changeCoinPrice() {
         const newPrice = document.getElementById('newCoinPrice').value;
         if (newPrice) {
-            document.getElementById('coinPrice').innerText = `${parseFloat(newPrice).toFixed(2)} $`;
-            alert('Preis erfolgreich geändert!');
+            const coinPriceElement = document.getElementById('coinPrice');
+            animatePriceChange(coinPriceElement, parseFloat(newPrice));
         } else {
             alert('Bitte einen gültigen Preis eingeben!');
         }
     }
+
+    function animatePriceChange(element, targetPrice) {
+        let currentPrice = 0;
+        const duration = 5000; // 5 Sekunden
+        const stepTime = duration / targetPrice;
+
+        const interval = setInterval(() => {
+            if (currentPrice < targetPrice) {
+                currentPrice += 0.01; // Erhöhe um 0.01
+                element.innerText = `${currentPrice.toFixed(2)} $`;
+            } else {
+                clearInterval(interval);
+            }
+        }, stepTime); 
+    }
+
+    loadLeaderboard();
 </script>
 
 </body>
