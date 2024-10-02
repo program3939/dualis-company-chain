@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual-Coin</title> <!-- Titel endlich geändert -->
+    <title>Dual-Coin</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        /* Allgemeines Layout */
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #eaeaea;
+            background-color: #f0f8f0;
             margin: 0;
             padding: 0;
+            color: #333;
         }
 
         header, footer {
             text-align: center;
-            background-color: #1e88e5;
+            background-color: #4CAF50;
             color: white;
             padding: 20px;
         }
@@ -63,13 +63,19 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #4CAF50;
+            outline: none;
         }
 
         button {
             padding: 15px 25px;
             font-size: 1.2em;
             color: white;
-            background-color: #1e88e5;
+            background-color: #4CAF50;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -78,7 +84,7 @@
         }
 
         button:hover {
-            background-color: #1565c0;
+            background-color: #45a049;
         }
 
         .error-message, .success-message {
@@ -110,7 +116,7 @@
         }
 
         th {
-            background-color: #1e88e5;
+            background-color: #4CAF50;
             color: white;
             text-align: left;
         }
@@ -161,7 +167,6 @@
         }
     </style>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
 </head>
@@ -173,17 +178,15 @@
 </header>
 
 <main>
-    <!-- Interaktiver Automat Sektion -->
     <section id="interactive-machine">
         <h2>Interaktiver Automat</h2>
         <p><strong>Aktueller Preis:</strong> <span id="coinPrice">10.00 $</span></p>
         <input type="text" id="discordInput" maxlength="20" placeholder="Discord-Name eingeben">
         <input type="text" id="codeInput" maxlength="8" placeholder="Code eingeben">
         <button onclick="submitCode()">Einreichen</button>
-        <div id="message" class="error-message" style="display:none;"></div> <!-- Fehlermeldung hier -->
+        <div id="message" class="error-message" style="display:none;"></div>
     </section>
 
-    <!-- Leaderboard Sektion -->
     <section id="leaderboard">
         <h2>Leaderboard</h2>
         <table>
@@ -199,25 +202,21 @@
         </table>
     </section>
 
-    <!-- Mitarbeiterzugang und Admin Panel -->
     <section id="admin-access">
         <h2>Mitarbeiterzugang</h2>
         <input type="text" id="adminUsername" placeholder="Benutzername">
         <input type="password" id="adminPassword" placeholder="Passwort">
         <button onclick="login()">Einloggen</button>
-        <div id="loginMessage" class="error-message" style="display:none;"></div> <!-- Login Fehleranzeige -->
+        <div id="loginMessage" class="error-message" style="display:none;"></div>
         <div id="adminPanel" style="display:none;">
             <h3>Admin-Panel</h3>
-
             <h4>Coin-Preis ändern:</h4>
             <input type="number" id="newCoinPrice" placeholder="Neuer Preis" step="0.01">
             <button onclick="changeCoinPrice()">Preis ändern</button>
-
             <h4>Neuen Code hinzufügen:</h4>
             <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
             <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)">
             <button onclick="addCode()">Code hinzufügen</button>
-
             <h4>Aktive Codes:</h4>
             <table id="activeCodes">
                 <thead>
@@ -240,7 +239,6 @@
 </footer>
 
 <script>
-    // Firebase-Konfiguration
     const firebaseConfig = {
         apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
         authDomain: "dualis-company-chain.firebaseapp.com",
@@ -251,7 +249,6 @@
         appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d"
     };
 
-    // Firebase initialisieren
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
@@ -260,13 +257,11 @@
         const password = document.getElementById('adminPassword').value;
         const loginMessage = document.getElementById('loginMessage');
 
-        // Simples Login mit festgelegtem Username und Passwort
         if (username === "Dualis" && password === "28102006") {
-            document.getElement
-                        document.getElementById('adminPanel').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'block';
             loginMessage.style.display = 'none';
-            loadActiveCodes(); // Codes laden beim Login
-            loadLeaderboard(); // Leaderboard beim Login laden
+            loadActiveCodes();
+            loadLeaderboard();
         } else {
             loginMessage.style.display = 'block';
             loginMessage.innerText = 'Falscher Benutzername oder Passwort.';
@@ -280,7 +275,7 @@
 
         if (!discordName || !code) {
             message.style.display = 'block';
-            message.className = 'error-message'; // Fehlernachricht
+            message.className = 'error-message';
             message.innerText = 'Bitte alle Felder ausfüllen!';
             return;
         }
@@ -290,15 +285,15 @@
             if (snapshot.exists()) {
                 const coinValue = snapshot.val();
                 alert(`Code akzeptiert! Du hast ${coinValue} Coins erhalten.`);
-                updateLeaderboard(discordName, coinValue); // Leaderboard aktualisieren
+                updateLeaderboard(discordName, coinValue);
             } else {
                 message.style.display = 'block';
-                message.className = 'error-message'; // Fehlernachricht
+                message.className = 'error-message';
                 message.innerText = 'Ungültiger Code!';
             }
         }).catch((error) => {
             message.style.display = 'block';
-            message.className = 'error-message'; // Fehlernachricht
+            message.className = 'error-message';
             message.innerText = 'Fehler bei der Überprüfung des Codes: ' + error.message;
         });
     }
@@ -306,9 +301,9 @@
     function updateLeaderboard(discordName, coins) {
         const leaderboardRef = database.ref('leaderboard/' + discordName);
         leaderboardRef.transaction((currentValue) => {
-            return (currentValue || 0) + coins; // Aktuellen Wert aktualisieren
+            return (currentValue || 0) + coins;
         }).then(() => {
-            loadLeaderboard(); // Leaderboard nach dem Update neu laden
+            loadLeaderboard();
         }).catch((error) => {
             console.error('Fehler beim Aktualisieren des Leaderboards:', error);
         });
@@ -318,7 +313,7 @@
         const leaderboardRef = database.ref('leaderboard/');
         leaderboardRef.once('value').then((snapshot) => {
             const tbody = document.querySelector('#leaderboard tbody');
-            tbody.innerHTML = ''; // Tabelle leeren
+            tbody.innerHTML = '';
 
             snapshot.forEach((childSnapshot) => {
                 const discordName = childSnapshot.key;
@@ -349,7 +344,7 @@
         codeRef.set(parseInt(coinValue))
             .then(() => {
                 alert('Code erfolgreich hinzugefügt!');
-                loadActiveCodes();  // Codes neu laden
+                loadActiveCodes();
             })
             .catch((error) => {
                 alert('Fehler beim Hinzufügen des Codes: ' + error.message);
@@ -360,7 +355,7 @@
         const activeCodesRef = database.ref('activeCodes/');
         activeCodesRef.once('value').then((snapshot) => {
             const tbody = document.querySelector('#activeCodes tbody');
-            tbody.innerHTML = ''; // Tabelle leeren
+            tbody.innerHTML = '';
 
             snapshot.forEach((childSnapshot) => {
                 const code = childSnapshot.key;
