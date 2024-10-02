@@ -3,108 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual-Coin</title> <!-- Titel geändert -->
+    <title>Dual-Coin</title> <!-- Titel endlich geändert -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        /* Design bleibt unverändert */
+        /* Allgemeines Layout */
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
+            background-color: #eaeaea;
             margin: 0;
             padding: 0;
         }
 
         header, footer {
             text-align: center;
-            background-color: #4CAF50;
+            background-color: #1e88e5;
             color: white;
-            padding: 20px 0;
+            padding: 20px;
         }
 
         main {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         section {
             background: white;
+            padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 800px;
-            margin-bottom: 20px;
-            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
         }
 
-        section h2 {
-            margin-top: 0;
+        h1, h2, h3, h4 {
             color: #333;
+            font-weight: 400;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
         }
 
         input[type="text"], input[type="password"], input[type="number"] {
-            width: 100%;
-            padding: 10px;
+            width: calc(100% - 20px);
+            padding: 15px;
+            font-size: 1.1em;
             margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         button {
-            background-color: #4CAF50;
+            padding: 15px 25px;
+            font-size: 1.2em;
             color: white;
-            padding: 10px 20px;
+            background-color: #1e88e5;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
             transition: background-color 0.3s;
+            margin-top: 10px;
         }
 
         button:hover {
-            background-color: #45a049;
+            background-color: #1565c0;
+        }
+
+        .error-message, .success-message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1em;
         }
 
         .error-message {
-            color: red;
-            margin: 10px 0;
+            background-color: #f44336;
+            color: white;
         }
 
         .success-message {
-            color: green;
-            margin: 10px 0;
+            background-color: #4CAF50;
+            color: white;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
+            margin-top: 20px;
         }
 
         th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
         }
 
         th {
-            background-color: #4CAF50;
+            background-color: #1e88e5;
             color: white;
+            text-align: left;
         }
 
-        @media (max-width: 600px) {
-            section {
-                width: 100%;
+        td {
+            text-align: left;
+            color: #333;
+        }
+
+        .remove-btn {
+            background-color: #f44336;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .remove-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 20px 10px;
             }
 
-            table {
-                font-size: 12px;
+            h1 {
+                font-size: 2em;
             }
 
-            input[type="text"], input[type="password"], input[type="number"], button {
-                font-size: 14px;
+            h2 {
+                font-size: 1.5em;
+            }
+
+            button {
+                font-size: 1em;
+            }
+
+            input[type="text"], input[type="password"], input[type="number"] {
+                font-size: 1em;
+            }
+
+            th, td {
+                padding: 10px;
             }
         }
     </style>
@@ -128,7 +180,7 @@
         <input type="text" id="discordInput" maxlength="20" placeholder="Discord-Name eingeben">
         <input type="text" id="codeInput" maxlength="8" placeholder="Code eingeben">
         <button onclick="submitCode()">Einreichen</button>
-        <div id="message" class="error-message"></div> <!-- Fehlermeldung hier -->
+        <div id="message" class="error-message" style="display:none;"></div> <!-- Fehlermeldung hier -->
     </section>
 
     <!-- Leaderboard Sektion -->
@@ -153,9 +205,10 @@
         <input type="text" id="adminUsername" placeholder="Benutzername">
         <input type="password" id="adminPassword" placeholder="Passwort">
         <button onclick="login()">Einloggen</button>
-        <div id="loginMessage"></div>
+        <div id="loginMessage" class="error-message" style="display:none;"></div> <!-- Login Fehleranzeige -->
         <div id="adminPanel" style="display:none;">
             <h3>Admin-Panel</h3>
+
             <h4>Coin-Preis ändern:</h4>
             <input type="number" id="newCoinPrice" placeholder="Neuer Preis" step="0.01">
             <button onclick="changeCoinPrice()">Preis ändern</button>
@@ -187,6 +240,7 @@
 </footer>
 
 <script>
+    // Firebase-Konfiguration
     const firebaseConfig = {
         apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
         authDomain: "dualis-company-chain.firebaseapp.com",
@@ -197,44 +251,88 @@
         appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d"
     };
 
+    // Firebase initialisieren
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
     function login() {
         const username = document.getElementById('adminUsername').value;
         const password = document.getElementById('adminPassword').value;
+        const loginMessage = document.getElementById('loginMessage');
 
+        // Simples Login mit festgelegtem Username und Passwort
         if (username === "Dualis" && password === "28102006") {
-            document.getElementById('adminPanel').style.display = 'block';
-            document.getElementById('loginMessage').innerText = 'Erfolgreich eingeloggt!';
-            document.getElementById('loginMessage').classList.add('success-message');
-            loadActiveCodes();  // Aktive Codes laden
+            document.getElement
+                        document.getElementById('adminPanel').style.display = 'block';
+            loginMessage.style.display = 'none';
+            loadActiveCodes(); // Codes laden beim Login
+            loadLeaderboard(); // Leaderboard beim Login laden
         } else {
-            document.getElementById('loginMessage').innerText = 'Falscher Benutzername oder Passwort!';
-            document.getElementById('loginMessage').classList.add('error-message');
+            loginMessage.style.display = 'block';
+            loginMessage.innerText = 'Falscher Benutzername oder Passwort.';
         }
     }
 
     function submitCode() {
         const discordName = document.getElementById('discordInput').value;
         const code = document.getElementById('codeInput').value;
+        const message = document.getElementById('message');
 
         if (!discordName || !code) {
-            document.getElementById('message').innerText = 'Bitte alle Felder ausfüllen!';
+            message.style.display = 'block';
+            message.className = 'error-message'; // Fehlernachricht
+            message.innerText = 'Bitte alle Felder ausfüllen!';
             return;
         }
 
         const codeRef = database.ref('activeCodes/' + code);
-        codeRef.once('value', (snapshot) => {
+        codeRef.once('value').then((snapshot) => {
             if (snapshot.exists()) {
                 const coinValue = snapshot.val();
                 alert(`Code akzeptiert! Du hast ${coinValue} Coins erhalten.`);
-                // Hier könnte eine zusätzliche Firebase-Operation ausgeführt werden, um Coins gutzuschreiben.
+                updateLeaderboard(discordName, coinValue); // Leaderboard aktualisieren
             } else {
-                document.getElementById('message').innerText = 'Ungültiger Code!';
+                message.style.display = 'block';
+                message.className = 'error-message'; // Fehlernachricht
+                message.innerText = 'Ungültiger Code!';
             }
         }).catch((error) => {
-            document.getElementById('message').innerText = 'Fehler bei der Überprüfung des Codes: ' + error.message;
+            message.style.display = 'block';
+            message.className = 'error-message'; // Fehlernachricht
+            message.innerText = 'Fehler bei der Überprüfung des Codes: ' + error.message;
+        });
+    }
+
+    function updateLeaderboard(discordName, coins) {
+        const leaderboardRef = database.ref('leaderboard/' + discordName);
+        leaderboardRef.transaction((currentValue) => {
+            return (currentValue || 0) + coins; // Aktuellen Wert aktualisieren
+        }).then(() => {
+            loadLeaderboard(); // Leaderboard nach dem Update neu laden
+        }).catch((error) => {
+            console.error('Fehler beim Aktualisieren des Leaderboards:', error);
+        });
+    }
+
+    function loadLeaderboard() {
+        const leaderboardRef = database.ref('leaderboard/');
+        leaderboardRef.once('value').then((snapshot) => {
+            const tbody = document.querySelector('#leaderboard tbody');
+            tbody.innerHTML = ''; // Tabelle leeren
+
+            snapshot.forEach((childSnapshot) => {
+                const discordName = childSnapshot.key;
+                const coins = childSnapshot.val();
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${discordName}</td>
+                    <td>${coins}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }).catch((error) => {
+            console.error('Fehler beim Laden des Leaderboards:', error);
         });
     }
 
@@ -242,24 +340,25 @@
         const newCode = document.getElementById('newCodeInput').value;
         const coinValue = document.getElementById('coinValue').value;
 
-        if (newCode && coinValue) {
-            const codeRef = database.ref('activeCodes/' + newCode);
-            codeRef.set(parseInt(coinValue))
-                .then(() => {
-                    alert('Code erfolgreich hinzugefügt!');
-                    loadActiveCodes();  // Codes neu laden
-                })
-                .catch((error) => {
-                    alert('Fehler beim Hinzufügen des Codes: ' + error.message);
-                });
-        } else {
+        if (!newCode || !coinValue) {
             alert('Bitte alle Felder ausfüllen!');
+            return;
         }
+
+        const codeRef = database.ref('activeCodes/' + newCode);
+        codeRef.set(parseInt(coinValue))
+            .then(() => {
+                alert('Code erfolgreich hinzugefügt!');
+                loadActiveCodes();  // Codes neu laden
+            })
+            .catch((error) => {
+                alert('Fehler beim Hinzufügen des Codes: ' + error.message);
+            });
     }
 
     function loadActiveCodes() {
         const activeCodesRef = database.ref('activeCodes/');
-        activeCodesRef.once('value', (snapshot) => {
+        activeCodesRef.once('value').then((snapshot) => {
             const tbody = document.querySelector('#activeCodes tbody');
             tbody.innerHTML = ''; // Tabelle leeren
 
@@ -271,10 +370,12 @@
                 row.innerHTML = `
                     <td>${code}</td>
                     <td>${value}</td>
-                    <td><button onclick="removeCode('${code}')">Entfernen</button></td>
+                    <td><button class="remove-btn" onclick="removeCode('${code}')">Entfernen</button></td>
                 `;
                 tbody.appendChild(row);
             });
+        }).catch((error) => {
+            console.error('Fehler beim Laden der aktiven Codes:', error);
         });
     }
 
