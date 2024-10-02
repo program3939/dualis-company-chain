@@ -22,10 +22,12 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            margin: 20px 0;
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px;
+            text-align: left;
         }
         th {
             background-color: #4CAF50; /* Grüner Hintergrund */
@@ -36,6 +38,37 @@
         }
         .success-message {
             color: green;
+        }
+        input[type="text"], input[type="password"], input[type="number"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        button {
+            background-color: #4CAF50; /* Grüner Hintergrund */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049; /* Dunklerer Grüner Hintergrund */
+        }
+        #adminPanel {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
         }
     </style>
     <!-- Firebase SDKs einfügen -->
@@ -176,22 +209,23 @@
             if (username === "Dualis" && password === "28102006") {
                 document.getElementById('adminPanel').style.display = 'block';
                 document.getElementById('loginMessage').textContent = 'Erfolgreich eingeloggt!';
+                loadActiveCodes(); // Lade aktive Codes beim Einloggen
             } else {
                 document.getElementById('loginMessage').textContent = 'Falscher Benutzername oder Passwort!';
             }
         }
 
-        function changeCoinPrice() {
-            const newPrice = parseFloat(document.getElementById('newCoinPrice').value);
-            if (isNaN(newPrice) || newPrice <= 0) {
-                alert('Bitte geben Sie einen gültigen Preis ein!');
-                return;
-            }
-            database.ref('coinPrice').set(newPrice).then(() => {
-                document.getElementById('coinPrice').innerText = newPrice.toFixed(2) + ' $';
-                alert('Preis erfolgreich geändert!');
-            }).catch((error) => {
-                console.error("Fehler beim Ändern des Preises: ", error);
+        function loadActiveCodes() {
+            const activeCodesRef = database.ref('activeCodes/');
+            activeCodesRef.once('value').then((snapshot) => {
+                const activeCodesTableBody = document.getElementById('activeCodes').getElementsByTagName('tbody')[0];
+                activeCodesTableBody.innerHTML = ''; // Leeren des aktuellen Inhalts
+                snapshot.forEach(childSnapshot => {
+                    const code = childSnapshot.key;
+                    const value = childSnapshot.val();
+                    const row = activeCodesTableBody.insertRow();
+                    row.innerHTML = `<td>${code}</td><td>${value}</td><td><button onclick="removeCode('${code}')">Entfernen</button></td>`;
+                });
             });
         }
 
@@ -206,12 +240,7 @@
 
             database.ref('activeCodes/' + newCode).set(coinValue).then(() => {
                 alert('Code erfolgreich hinzugefügt!');
-                // Code zur Anzeige des neuen Codes im Admin-Panel
-                const activeCodesTableBody = document.getElementById('activeCodes').getElementsByTagName('tbody')[0];
-                const newRow = activeCodesTableBody.insertRow();
-                newRow.insertCell(0).innerText = newCode;
-                newRow.insertCell(1).innerText = coinValue;
-                newRow.insertCell(2).innerHTML = '<button onclick="removeCode(\'' + newCode + '\')">Entfernen</button>';
+                loadActiveCodes(); // Nach dem Hinzufügen den Code in die Tabelle laden
             }).catch((error) => {
                 console.error("Fehler beim Hinzufügen des Codes: ", error);
             });
@@ -220,14 +249,7 @@
         function removeCode(code) {
             database.ref('activeCodes/' + code).remove().then(() => {
                 alert('Code erfolgreich entfernt!');
-                // Entfernen des Codes aus der Tabelle
-                const activeCodesTableBody = document.getElementById('activeCodes').getElementsByTagName('tbody')[0];
-                for (let i = 0; i < activeCodesTableBody.rows.length; i++) {
-                    if (activeCodesTableBody.rows[i].cells[0].innerText === code) {
-                        activeCodesTableBody.deleteRow(i);
-                        break;
-                    }
-                }
+                loadActiveCodes(); // Nach dem Entfernen den Code in die Tabelle laden
             }).catch((error) => {
                 console.error("Fehler beim Entfernen des Codes: ", error);
             });
@@ -236,6 +258,20 @@
         function updateUserCoins(discordName, coinValue) {
             // Logik zum Aktualisieren der Coins eines Benutzers
             alert(discordName + ' hat ' + coinValue + ' Coins erhalten!');
+        }
+
+        function changeCoinPrice() {
+            const newPrice = parseFloat(document.getElementById('newCoinPrice').value);
+            if (isNaN(newPrice) || newPrice <= 0) {
+                alert('Bitte geben Sie einen gültigen Preis ein!');
+                return;
+            }
+            database.ref('coinPrice').set(newPrice).then(() => {
+                document.getElementById('coinPrice').innerText = newPrice.toFixed(2) + ' $';
+                alert('Preis erfolgreich geändert!');
+            }).catch((error) => {
+                console.error("Fehler beim Ändern des Preises: ", error);
+            });
         }
 
         function resetAll() {
