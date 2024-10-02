@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual-Coin Admin Panel</title>
+    <title>Dual-Coin</title>
     <style>
+        /* Grundlegendes Styling */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
@@ -17,6 +18,19 @@
             background-color: #4CAF50; /* Grüner Hintergrund */
             color: white;
             padding: 10px 0;
+        }
+        main {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        section {
+            background: #ffffff;
+            padding: 20px;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 45%;
         }
         table {
             width: 100%;
@@ -59,6 +73,7 @@
             color: green;
         }
         #adminPanel {
+            display: none;
             background: #ffffff;
             padding: 20px;
             border-radius: 10px;
@@ -73,17 +88,44 @@
 <body>
 
 <header>
-    <h1>Dual-Coin Admin Panel</h1>
+    <h1>Willkommen bei Dual-Coin</h1>
 </header>
 
 <main>
+    <!-- Interaktiver Automat Sektion -->
+    <section id="interactive-machine">
+        <h2>Interaktiver Automat</h2>
+        <p><strong>Aktueller Preis:</strong> <span id="coinPrice">10.00 $</span></p>
+        <input type="text" id="discordInput" maxlength="20" placeholder="Discord-Name eingeben">
+        <input type="text" id="codeInput" maxlength="8" placeholder="Code eingeben">
+        <button onclick="submitCode()">Einreichen</button>
+        <div id="message" class="error-message"></div>
+    </section>
+
+    <!-- Leaderboard Sektion -->
+    <section id="leaderboard">
+        <h2>Leaderboard</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Discord-Name</th>
+                    <th>Coins</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Leaderboard-Daten werden hier dynamisch hinzugefügt -->
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Mitarbeiterzugang und Admin Panel -->
     <section id="admin-access">
         <h2>Mitarbeiterzugang</h2>
         <input type="text" id="adminUsername" placeholder="Benutzername">
         <input type="password" id="adminPassword" placeholder="Passwort">
         <button onclick="login()">Einloggen</button>
-        <div id="loginMessage"></div>
-        <div id="adminPanel" style="display:none;">
+        <div id="loginMessage"></div> <!-- Hier wird die Erfolgs- oder Fehlermeldung angezeigt -->
+        <div id="adminPanel">
             <h3>Admin-Panel</h3>
             <h4>Coin-Preis ändern:</h4>
             <input type="number" id="newCoinPrice" placeholder="Neuer Preis" step="0.01">
@@ -104,6 +146,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- Aktive Codes werden hier angezeigt -->
                 </tbody>
             </table>
         </div>
@@ -122,14 +165,13 @@
         projectId: "dualis-company-chain",
         storageBucket: "dualis-company-chain.appspot.com",
         messagingSenderId: "521000433736",
-        appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d",
+        appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d"
     };
 
     // Firebase initialisieren
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Login-Funktion
     function login() {
         const username = document.getElementById('adminUsername').value;
         const password = document.getElementById('adminPassword').value;
@@ -143,7 +185,6 @@
         }
     }
 
-    // Codes laden und anzeigen
     function loadActiveCodes() {
         const activeCodesRef = database.ref('activeCodes/');
         activeCodesRef.once('value', (snapshot) => {
@@ -165,7 +206,6 @@
         });
     }
 
-    // Code hinzufügen
     function addCode() {
         const newCode = document.getElementById('newCodeInput').value;
         const coinValue = document.getElementById('coinValue').value;
@@ -182,35 +222,6 @@
                 });
         } else {
             alert('Bitte alle Felder ausfüllen!');
-        }
-    }
-
-    // Code entfernen
-    function removeCode(code) {
-        database.ref('activeCodes/' + code).remove()
-            .then(() => {
-                alert('Code erfolgreich entfernt!');
-                loadActiveCodes();  // Codes neu laden
-            })
-            .catch((error) => {
-                alert('Fehler beim Entfernen des Codes: ' + error.message);
-            });
-    }
-
-    // Coin-Preis ändern
-    function changeCoinPrice() {
-        const newPrice = document.getElementById('newCoinPrice').value;
-
-        if (newPrice) {
-            database.ref('coinPrice').set(parseFloat(newPrice))
-                .then(() => {
-                    alert('Preis erfolgreich geändert!');
-                })
-                .catch((error) => {
-                    alert('Fehler beim Ändern des Preises: ' + error.message);
-                });
-        } else {
-            alert('Bitte einen gültigen Preis eingeben!');
         }
     }
 </script>
