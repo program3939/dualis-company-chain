@@ -1,8 +1,4 @@
-// Firebase SDKs einfügen
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
-
-// Deine Firebase-Konfiguration
+// Firebase-Konfiguration
 const firebaseConfig = {
     apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
     authDomain: "dualis-company-chain.firebaseapp.com",
@@ -15,47 +11,44 @@ const firebaseConfig = {
 };
 
 // Firebase initialisieren
-const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
+const app = firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
-let codes = JSON.parse(localStorage.getItem('codes')) || {};
+// Globale Variablen
+let codes = {};
 let users = {};
-let coinPrice = parseFloat(localStorage.getItem('coinPrice')) || 10.00;
+let coinPrice = 10.00;
 
-// Funktion zum Speichern des Leaderboards in Firebase
-function saveLeaderboardData() {
-    const leaderboardRef = ref(database, 'leaderboard/');
-    const leaderboardData = {
-        users: users
-    };
-
-    set(leaderboardRef, leaderboardData)
-        .then(() => {
-            console.log('Leaderboard erfolgreich gespeichert!');
-        })
-        .catch((error) => {
-            console.error('Fehler beim Speichern des Leaderboards: ', error);
-        });
+// Führt den Code aus, um die Daten aus Firebase zu laden
+window.onload = function() {
+    loadData();
 }
 
-// Funktion zum Laden des Leaderboards von Firebase
-function loadLeaderboardData() {
-    const leaderboardRef = ref(database, 'leaderboard/');
+// Daten aus Firebase laden
+function loadData() {
+    // Leaderboard-Daten laden
+    const usersRef = database.ref('users');
+    usersRef.on('value', (snapshot) => {
+        users = snapshot.val() || {};
+        updateLeaderboard();
+    });
 
-    get(leaderboardRef)
-        .then((snapshot) => {
-            if (snapshot.exists()) {
-                users = snapshot.val().users;
-                updateUI(); // Aktualisiere das UI mit den geladenen Daten
-            } else {
-                console.log('Keine Daten vorhanden');
-            }
-        })
-        .catch((error) => {
-            console.error('Fehler beim Abrufen der Daten: ', error);
-        });
+    // Codes laden
+    const codesRef = database.ref('codes');
+    codesRef.on('value', (snapshot) => {
+        codes = snapshot.val() || {};
+        updateActiveCodes();
+    });
+
+    // Coin-Preis laden
+    const priceRef = database.ref('coinPrice');
+    priceRef.on('value', (snapshot) => {
+        coinPrice = snapshot.val() || 10.00;
+        document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
+    });
 }
 
+// Code einreichen
 function submitCode() {
     const codeInput = document.getElementById("codeInput").value;
     const discordInput = document.getElementById("discordInput").value;
@@ -70,13 +63,19 @@ function submitCode() {
             users[discordInput] = coinValue;
         }
 
-        updateUI();
+        // Update Coin-Preis
+        coinPrice *= 1 + (0.02 * coinValue);
+
+        // Speichern der Änderungen in Firebase
+        database.ref('users').set(users);
+        database.ref('coinPrice').set(coinPrice);
+        delete codes[codeInput];
+        database.ref('codes').set(codes);
+
         message.textContent = "Code erfolgreich eingereicht!";
         message.className = "";
 
-        delete codes[codeInput];
-        localStorage.setItem('codes', JSON.stringify(codes));
-        saveLeaderboardData(); // Speichern nach dem Aktualisieren
+        updateUI(discordInput, codeInput);
     } else {
         message.textContent = "Ungültiger Code oder Discord-Name!";
         message.className = "error-message";
@@ -86,7 +85,14 @@ function submitCode() {
     document.getElementById("discordInput").value = "";
 }
 
-function updateUI() {
+// UI aktualisieren
+function updateUI(discordName, code) {
+    updateLeaderboard();
+    document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
+}
+
+// Leaderboard aktualisieren
+function updateLeaderboard() {
     const leaderboard = document.getElementById("leaderboard").getElementsByTagName('tbody')[0];
     leaderboard.innerHTML = "";
 
@@ -95,90 +101,87 @@ function updateUI() {
         newRow.insertCell(0).textContent = name;
         newRow.insertCell(1).textContent = coins;
     }
-
-    document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
 }
 
+// Admin-Login
 function login() {
     const username = document.getElementById("adminUsername").value;
     const password = document.getElementById("adminPassword").value;
     const adminPanel = document.getElementById("adminPanel");
     const loginMessage = document.getElementById("loginMessage");
 
-    // Überprüfen, ob die Anmeldedaten korrekt sind
     if (username === "Dualis" && password === "28102006") {
-        adminPanel.style.display = "block"; // Zeigt das Admin-Panel an
-        loadLeaderboardData(); // Lade die Leaderboard-Daten
+        adminPanel.style.display = "block"; 
+        updateAdminPanel();
         loginMessage.textContent = "Erfolgreich eingeloggt!";
-        loginMessage.className = "success-message"; // Erfolgsnachricht
+        loginMessage.className = "success-message"; 
     } else {
         loginMessage.textContent = "Ungültige Anmeldeinformationen!";
-        loginMessage.className = "error-message"; // Fehlermeldung
+        loginMessage.className = "error-message"; 
     }
 }
 
-// Die folgenden Funktionen fügen Codes hinzu und aktualisieren die Coins
+// Neuen Code hinzufügen
 function addCode() {
     const newCodeInput = document.getElementById("newCodeInput").value;
     const coinValue = parseFloat(document.getElementById("coinValue").value);
-
-    if (newCodeInput.length > 0 && newCodeInput.length <= 8 && !codes[newCodeInput]) {
+    if (newCodeInput && coinValue > 0) {
         codes[newCodeInput] = coinValue;
-        localStorage.setItem('codes', JSON.stringify(codes));
-        alert("Neuer Code hinzugefügt!");
-    } else {
-        alert("Ungültiger Code oder der Code existiert bereits!");
+        database.ref('codes').set(codes);
+        updateActiveCodes();
+        document.getElementById("newCodeInput").value = "";
+        document.getElementById("coinValue").value = "";
     }
-    document.getElementById("newCodeInput").value = "";
-    document.getElementById("coinValue").value = "";
 }
 
+// Aktive Codes aktualisieren
+function updateActiveCodes() {
+    const activeCodesTable = document.getElementById("activeCodes").getElementsByTagName('tbody')[0];
+    activeCodesTable.innerHTML = "";
+
+    for (const [code, value] of Object.entries(codes)) {
+        const newRow = activeCodesTable.insertRow();
+        newRow.insertCell(0).textContent = code;
+        newRow.insertCell(1).textContent = value;
+        const actionCell = newRow.insertCell(2);
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = "Löschen";
+        deleteButton.onclick = () => {
+            delete codes[code];
+            database.ref('codes').set(codes);
+            updateActiveCodes();
+        };
+        actionCell.appendChild(deleteButton);
+    }
+}
+
+// Coin-Preis ändern
 function changeCoinPrice() {
     const newPrice = parseFloat(document.getElementById("newCoinPrice").value);
-    if (!isNaN(newPrice) && newPrice > 0) {
+    if (newPrice > 0) {
         coinPrice = newPrice;
-        localStorage.setItem('coinPrice', coinPrice);
-        document.getElementById("coinPrice").textContent = coinPrice.toFixed(2) + " $";
-        alert("Coin-Preis erfolgreich geändert!");
-        saveLeaderboardData(); // Speichern der Coin-Preisdaten
-    } else {
-        alert("Bitte geben Sie einen gültigen Preis ein.");
+        database.ref('coinPrice').set(coinPrice);
+        document.getElementById("newCoinPrice").value = "";
     }
-    document.getElementById("newCoinPrice").value = "";
 }
 
+// Benutzer-Coins aktualisieren
 function updateUserCoins() {
-    const userDiscord = document.getElementById("userDiscord").value;
-    const coinChange = parseFloat(document.getElementById("coinChange").value);
+    const discordName = document.getElementById("userDiscord").value;
+    const coinChange = parseInt(document.getElementById("coinChange").value);
 
-    if (users[userDiscord]) {
-        users[userDiscord] += coinChange;
-        if (users[userDiscord] < 0) {
-            users[userDiscord] = 0; // Verhindern, dass die Coins negativ werden
-        }
-        updateUI();
-        saveLeaderboardData(); // Speichern der aktualisierten Coins
-        alert("Coins erfolgreich aktualisiert!");
-    } else {
-        alert("Nutzer nicht gefunden!");
+    if (users[discordName] && coinChange) {
+        users[discordName] += coinChange;
+        database.ref('users').set(users);
+        updateLeaderboard();
+        document.getElementById("userDiscord").value = "";
+        document.getElementById("coinChange").value = "";
     }
-    document.getElementById("userDiscord").value = "";
-    document.getElementById("coinChange").value = "";
 }
 
+// Alle Daten zurücksetzen
 function resetAll() {
-    if (confirm("Möchten Sie wirklich alle Daten zurücksetzen?")) {
-        users = {};
-        codes = {};
-        localStorage.removeItem('codes');
-        localStorage.removeItem('coinPrice');
-        coinPrice = 10.00; // Zurücksetzen auf den Standardpreis
-        localStorage.setItem('coinPrice', coinPrice);
-        updateUI();
-        saveLeaderboardData(); // Leeres Leaderboard speichern
-        alert("Alle Daten wurden zurückgesetzt.");
-    }
+    database.ref('users').set({});
+    database.ref('codes').set({});
+    database.ref('coinPrice').set(10.00);
 }
-
-// Beim Laden der Seite das Leaderboard abrufen
-loadLeaderboardData();
