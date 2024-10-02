@@ -94,55 +94,83 @@
     </header>
 
     <main>
-        <section id="interactive-machine">
+        <section id="auth-section">
+            <h2>Registrieren / Anmelden</h2>
+            <form id="registerForm" style="display:none;">
+                <h3>Registrierung</h3>
+                <label for="username">Benutzername:</label>
+                <input type="text" id="username" placeholder="Benutzername" required>
+
+                <label for="discord">Discord-Name:</label>
+                <input type="text" id="discord" placeholder="Discord-Name" required>
+
+                <label for="realName">Name:</label>
+                <input type="text" id="realName" placeholder="Vollständiger Name" required>
+
+                <label for="password">Passwort:</label>
+                <input type="password" id="password" placeholder="Passwort" required>
+
+                <button type="button" onclick="register()">Registrieren</button>
+                <p id="registerFeedback" class="error-message"></p>
+            </form>
+
+            <form id="loginForm">
+                <h3>Anmeldung</h3>
+                <label for="loginUsername">Benutzername:</label>
+                <input type="text" id="loginUsername" placeholder="Benutzername" required>
+
+                <label for="loginPassword">Passwort:</label>
+                <input type="password" id="loginPassword" placeholder="Passwort" required>
+
+                <button type="button" onclick="login()">Anmelden</button>
+                <p id="loginFeedback" class="error-message"></p>
+            </form>
+        </section>
+
+        <section id="interactive-machine" style="display:none;">
             <h2>Interaktiver Automat</h2>
             <p><strong>Aktueller Preis:</strong> <span id="coinPrice">10.00 $</span></p>
-            <input type="text" id="discordInput" maxlength="20" placeholder="Discord-Name eingeben">
-            <input type="text" id="codeInput" maxlength="8" placeholder="Code eingeben">
-            <button onclick="submitCode()">Einreichen</button>
+            <p><strong>Persönlicher Code-Betrag:</strong> <span id="personalCoins">0 Coins</span></p>
+            <input type="number" id="coinAmount" placeholder="Menge Coins kaufen" min="1">
+            <button onclick="buyCoins()">Coins kaufen</button>
             <div id="message" class="error-message"></div>
         </section>
 
-        <section id="leaderboard">
+        <section id="leaderboard" style="display:none;">
             <h2>Leaderboard</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Discord-Name</th>
-                        <th>Coins</th> <!-- Titel bleibt erhalten -->
+                        <th>Benutzername</th>
+                        <th>Coins</th>
+                        <th>Überweisungsnummer</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="leaderboardBody">
                     <!-- Leaderboard-Daten werden hier dynamisch hinzugefügt -->
                 </tbody>
             </table>
         </section>
 
-        <section id="transfer-system">
+        <section id="transfer-system" style="display:none;">
             <h2>Überweisungssystem</h2>
             <form id="transferForm">
-                <label for="recipientName">Empfängername:</label>
-                <input type="text" id="recipientName" placeholder="Empfängername" required>
+                <label for="transferCode">Überweisungsnummer des Empfängers:</label>
+                <input type="text" id="transferCode" placeholder="Empfänger Überweisungsnummer" required>
 
-                <label for="iban">IBAN:</label>
-                <input type="text" id="iban" placeholder="IBAN" required>
-
-                <label for="amount">Betrag (in Euro):</label>
-                <input type="number" id="amount" placeholder="Betrag" required min="1">
-
-                <label for="message">Verwendungszweck:</label>
-                <input type="text" id="message" placeholder="Verwendungszweck">
+                <label for="transferAmount">Betrag (in Coins):</label>
+                <input type="number" id="transferAmount" placeholder="Betrag in Coins" required min="1">
 
                 <button type="button" onclick="submitTransfer()">Überweisen</button>
                 <p id="transferFeedback" class="message"></p>
             </form>
         </section>
 
-        <section id="admin-access">
+        <section id="admin-access" style="display:none;">
             <h2>Mitarbeiterzugang</h2>
             <input type="text" id="adminUsername" placeholder="Benutzername">
             <input type="password" id="adminPassword" placeholder="Passwort">
-            <button onclick="login()">Einloggen</button>
+            <button onclick="adminLogin()">Einloggen</button>
 
             <div id="adminPanel" style="display:none;">
                 <h3>Admin-Panel</h3>
@@ -163,52 +191,109 @@
                         <!-- Aktive Codes werden hier angezeigt -->
                     </tbody>
                 </table>
-                <button onclick="resetAll()">Alle zurücksetzen</button>
+               <button onclick="generateLeaderboard()">Leaderboard generieren</button>
+                <div id="adminLeaderboardMessage" class="message"></div>
             </div>
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2024 Dual-Coin. Alle Rechte vorbehalten.</p>
-    </footer>
-
     <script>
-        // Existierende Dual-Coin-Funktionen
+        let users = [];
+        let loggedInUser = null;
 
-        // Funktionen für das Überweisungssystem
-        function submitTransfer() {
-            const recipientName = document.getElementById('recipientName').value;
-            const iban = document.getElementById('iban').value;
-            const amount = document.getElementById('amount').value;
-            const transferMessage = document.getElementById('message').value;
-            const feedback = document.getElementById('transferFeedback');
+        function register() {
+            const username = document.getElementById('username').value;
+            const discord = document.getElementById('discord').value;
+            const realName = document.getElementById('realName').value;
+            const password = document.getElementById('password').value;
 
-            if (!recipientName || !iban || amount <= 0) {
-                feedback.textContent = "Bitte alle Felder korrekt ausfüllen.";
-                feedback.className = "error-message";
-                return;
+            if (username && discord && realName && password) {
+                const newUser = {
+                    username: username,
+                    discord: discord,
+                    realName: realName,
+                    password: password,
+                    coins: 0,
+                    transferCode: generateTransferCode()
+                };
+
+                users.push(newUser);
+                document.getElementById('registerFeedback').innerText = 'Registrierung erfolgreich!';
+                document.getElementById('registerForm').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+            } else {
+                document.getElementById('registerFeedback').innerText = 'Alle Felder müssen ausgefüllt werden!';
             }
+        }
 
-            feedback.textContent = "Überweisung erfolgreich durchgeführt!";
-            feedback.className = "message";
+        function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
 
-            // Überweisungsdaten simuliert verarbeiten
-            const transferData = {
-                recipientName: recipientName,
-                iban: iban,
-                amount: parseFloat(amount),
-                message: transferMessage
-            };
+            const user = users.find(user => user.username === username && user.password === password);
+            if (user) {
+                loggedInUser = user;
+                document.getElementById('loginFeedback').innerText = '';
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('interactive-machine').style.display = 'block';
+                document.getElementById('leaderboard').style.display = 'block';
+                document.getElementById('transfer-system').style.display = 'block';
+                document.getElementById('personalCoins').innerText = user.coins + ' Coins';
+                generateLeaderboard();
+            } else {
+                document.getElementById('loginFeedback').innerText = 'Falsche Anmeldedaten!';
+            }
+        }
 
-            // Hier könnte ein echter Backend-Aufruf gemacht werden, z.B.:
-            // fetch('/api/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(transferData) });
-            console.log("Überweisung gesendet: ", transferData);
+        function generateTransferCode() {
+            return Math.floor(10000 + Math.random() * 90000).toString();
+        }
 
-            // Felder leeren
-            document.getElementById('recipientName').value = '';
-            document.getElementById('iban').value = '';
-            document.getElementById('amount').value = '';
-            document.getElementById('message').value = '';
+        function buyCoins() {
+            const coinAmount = document.getElementById('coinAmount').value;
+            if (coinAmount && coinAmount > 0) {
+                loggedInUser.coins += parseInt(coinAmount);
+                document.getElementById('personalCoins').innerText = loggedInUser.coins + ' Coins';
+                document.getElementById('message').innerText = 'Coins erfolgreich gekauft!';
+                generateLeaderboard();
+            } else {
+                document.getElementById('message').innerText = 'Ungültige Menge!';
+            }
+        }
+
+        function generateLeaderboard() {
+            const leaderboardBody = document.getElementById('leaderboardBody');
+            leaderboardBody.innerHTML = '';
+
+            users.sort((a, b) => b.coins - a.coins).forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${user.coins}</td>
+                    <td>${user.transferCode}</td>
+                `;
+                leaderboardBody.appendChild(row);
+            });
+        }
+
+        function submitTransfer() {
+            const transferCode = document.getElementById('transferCode').value;
+            const transferAmount = document.getElementById('transferAmount').value;
+
+            const recipient = users.find(user => user.transferCode === transferCode);
+            if (recipient && transferAmount && transferAmount > 0) {
+                if (loggedInUser.coins >= transferAmount) {
+                    loggedInUser.coins -= parseInt(transferAmount);
+                    recipient.coins += parseInt(transferAmount);
+                    document.getElementById('transferFeedback').innerText = 'Überweisung erfolgreich!';
+                    document.getElementById('personalCoins').innerText = loggedInUser.coins + ' Coins';
+                    generateLeaderboard();
+                } else {
+                    document.getElementById('transferFeedback').innerText = 'Nicht genügend Coins!';
+                }
+            } else {
+                document.getElementById('transferFeedback').innerText = 'Ungültige Überweisungsnummer oder Betrag!';
+            }
         }
     </script>
 </body>
