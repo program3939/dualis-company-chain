@@ -50,22 +50,6 @@
             background-color: #45a049;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            border: 1px solid #dddddd;
-            text-align: left;
-            padding: 8px;
-        }
-
-        th {
-            background-color: #4CAF50;
-            color: white;
-        }
-
         .error-message {
             color: red;
             font-weight: bold;
@@ -75,17 +59,6 @@
             color: green;
             font-weight: bold;
         }
-
-        @media (max-width: 600px) {
-            input[type="text"], input[type="password"], button {
-                width: 100%;
-                margin: 10px 0;
-            }
-
-            section {
-                padding: 10px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -94,8 +67,13 @@
     </header>
 
     <main>
-        <section id="auth-section">
-            <h2>Registrieren / Anmelden</h2>
+        <section id="auth-choice">
+            <h2>Wählen Sie:</h2>
+            <button onclick="showLoginForm()">Anmelden</button>
+            <button onclick="showRegisterForm()">Registrieren</button>
+        </section>
+
+        <section id="auth-section" style="display:none;">
             <form id="registerForm" style="display:none;">
                 <h3>Registrierung</h3>
                 <label for="username">Benutzername:</label>
@@ -114,7 +92,7 @@
                 <p id="registerFeedback" class="error-message"></p>
             </form>
 
-            <form id="loginForm">
+            <form id="loginForm" style="display:none;">
                 <h3>Anmeldung</h3>
                 <label for="loginUsername">Benutzername:</label>
                 <input type="text" id="loginUsername" placeholder="Benutzername" required>
@@ -126,81 +104,26 @@
                 <p id="loginFeedback" class="error-message"></p>
             </form>
         </section>
-
-        <section id="interactive-machine" style="display:none;">
-            <h2>Interaktiver Automat</h2>
-            <p><strong>Aktueller Preis:</strong> <span id="coinPrice">10.00 $</span></p>
-            <p><strong>Persönlicher Code-Betrag:</strong> <span id="personalCoins">0 Coins</span></p>
-            <input type="number" id="coinAmount" placeholder="Menge Coins kaufen" min="1">
-            <button onclick="buyCoins()">Coins kaufen</button>
-            <div id="message" class="error-message"></div>
-        </section>
-
-        <section id="leaderboard" style="display:none;">
-            <h2>Leaderboard</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Benutzername</th>
-                        <th>Coins</th>
-                        <th>Überweisungsnummer</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboardBody">
-                    <!-- Leaderboard-Daten werden hier dynamisch hinzugefügt -->
-                </tbody>
-            </table>
-        </section>
-
-        <section id="transfer-system" style="display:none;">
-            <h2>Überweisungssystem</h2>
-            <form id="transferForm">
-                <label for="transferCode">Überweisungsnummer des Empfängers:</label>
-                <input type="text" id="transferCode" placeholder="Empfänger Überweisungsnummer" required>
-
-                <label for="transferAmount">Betrag (in Coins):</label>
-                <input type="number" id="transferAmount" placeholder="Betrag in Coins" required min="1">
-
-                <button type="button" onclick="submitTransfer()">Überweisen</button>
-                <p id="transferFeedback" class="message"></p>
-            </form>
-        </section>
-
-        <section id="admin-access" style="display:none;">
-            <h2>Mitarbeiterzugang</h2>
-            <input type="text" id="adminUsername" placeholder="Benutzername">
-            <input type="password" id="adminPassword" placeholder="Passwort">
-            <button onclick="adminLogin()">Einloggen</button>
-
-            <div id="adminPanel" style="display:none;">
-                <h3>Admin-Panel</h3>
-                <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
-                <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)">
-                <button onclick="addCode()">Code hinzufügen</button>
-                <div id="adminMessage" class="error-message"></div>
-
-                <h4>Aktive Codes:</h4>
-                <table id="activeCodes">
-                    <thead>
-                        <tr>
-                            <th>Code</th>
-                            <th>Coin-Wert</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Aktive Codes werden hier angezeigt -->
-                    </tbody>
-                </table>
-               <button onclick="generateLeaderboard()">Leaderboard generieren</button>
-                <div id="adminLeaderboardMessage" class="message"></div>
-            </div>
-        </section>
     </main>
 
     <script>
         let users = [];
-        let loggedInUser = null;
 
+        // Zeige Login-Formular
+        function showLoginForm() {
+            document.getElementById('auth-choice').style.display = 'none';
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('loginForm').style.display = 'block';
+        }
+
+        // Zeige Registrierungs-Formular
+        function showRegisterForm() {
+            document.getElementById('auth-choice').style.display = 'none';
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+
+        // Funktion zur Registrierung
         function register() {
             const username = document.getElementById('username').value;
             const discord = document.getElementById('discord').value;
@@ -208,92 +131,56 @@
             const password = document.getElementById('password').value;
 
             if (username && discord && realName && password) {
+                const transferCode = generateTransferCode();
+
+                // Hier Datenbankintegration für Registrierung
                 const newUser = {
                     username: username,
                     discord: discord,
                     realName: realName,
                     password: password,
                     coins: 0,
-                    transferCode: generateTransferCode()
+                    transferCode: transferCode
                 };
 
-                users.push(newUser);
+                users.push(newUser); // Pseudo-Datenbank
                 document.getElementById('registerFeedback').innerText = 'Registrierung erfolgreich!';
                 document.getElementById('registerForm').style.display = 'none';
                 document.getElementById('loginForm').style.display = 'block';
+
+                // Hier sollte der neue User in die echte Datenbank gespeichert werden.
+                // z.B.: saveUserToDatabase(newUser);
             } else {
                 document.getElementById('registerFeedback').innerText = 'Alle Felder müssen ausgefüllt werden!';
             }
         }
 
+        // Funktion zur Anmeldung
         function login() {
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
 
+            // Hier Datenbankintegration zur Überprüfung der Login-Daten
             const user = users.find(user => user.username === username && user.password === password);
             if (user) {
                 loggedInUser = user;
                 document.getElementById('loginFeedback').innerText = '';
-                document.getElementById('auth-section').style.display = 'none';
-                document.getElementById('interactive-machine').style.display = 'block';
-                document.getElementById('leaderboard').style.display = 'block';
-                document.getElementById('transfer-system').style.display = 'block';
-                document.getElementById('personalCoins').innerText = user.coins + ' Coins';
-                generateLeaderboard();
+                // Weiter zur Hauptseite oder zum Dashboard
             } else {
                 document.getElementById('loginFeedback').innerText = 'Falsche Anmeldedaten!';
             }
         }
 
+        // Funktion zur Generierung der Überweisungsnummer
         function generateTransferCode() {
             return Math.floor(10000 + Math.random() * 90000).toString();
         }
 
-        function buyCoins() {
-            const coinAmount = document.getElementById('coinAmount').value;
-            if (coinAmount && coinAmount > 0) {
-                loggedInUser.coins += parseInt(coinAmount);
-                document.getElementById('personalCoins').innerText = loggedInUser.coins + ' Coins';
-                document.getElementById('message').innerText = 'Coins erfolgreich gekauft!';
-                generateLeaderboard();
-            } else {
-                document.getElementById('message').innerText = 'Ungültige Menge!';
-            }
-        }
-
-        function generateLeaderboard() {
-            const leaderboardBody = document.getElementById('leaderboardBody');
-            leaderboardBody.innerHTML = '';
-
-            users.sort((a, b) => b.coins - a.coins).forEach(user => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${user.username}</td>
-                    <td>${user.coins}</td>
-                    <td>${user.transferCode}</td>
-                `;
-                leaderboardBody.appendChild(row);
-            });
-        }
-
-        function submitTransfer() {
-            const transferCode = document.getElementById('transferCode').value;
-            const transferAmount = document.getElementById('transferAmount').value;
-
-            const recipient = users.find(user => user.transferCode === transferCode);
-            if (recipient && transferAmount && transferAmount > 0) {
-                if (loggedInUser.coins >= transferAmount) {
-                    loggedInUser.coins -= parseInt(transferAmount);
-                    recipient.coins += parseInt(transferAmount);
-                    document.getElementById('transferFeedback').innerText = 'Überweisung erfolgreich!';
-                    document.getElementById('personalCoins').innerText = loggedInUser.coins + ' Coins';
-                    generateLeaderboard();
-                } else {
-                    document.getElementById('transferFeedback').innerText = 'Nicht genügend Coins!';
-                }
-            } else {
-                document.getElementById('transferFeedback').innerText = 'Ungültige Überweisungsnummer oder Betrag!';
-            }
+        // Beispiel einer Funktion, die die Benutzer in einer echten Datenbank speichert (Pseudocode)
+        function saveUserToDatabase(user) {
+            // Hier würde der echte API-Aufruf oder die Datenbankabfrage erfolgen
+            // z.B. mit fetch(), AJAX oder einer Server-seitigen Lösung
+            console.log('Benutzer in die Datenbank gespeichert:', user);
         }
     </script>
 </body>
