@@ -174,7 +174,7 @@
 <body>
 
 <header>
-    <h1>Dual-Coin Admin Panel</h1>
+    <h1>Dual-Coin</h1>
 </header>
 
 <main>
@@ -213,10 +213,10 @@
             <h4>Coin-Preis ändern:</h4>
             <input type="number" id="newCoinPrice" placeholder="Neuer Preis" step="0.01">
             <button onclick="changeCoinPrice()">Preis ändern</button>
-            <h4>Neuen Code hinzufügen:</h4>
+            <h4>Neuen Code generieren:</h4>
             <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code generieren">
             <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)">
-            <button onclick="addCode()">Code hinzufügen</button>
+            <button onclick="generateCode()">Code generieren</button>
             <h4>Aktive Codes:</h4>
             <table id="activeCodes">
                 <thead>
@@ -331,7 +331,7 @@
         });
     }
 
-    function addCode() {
+    function generateCode() {
         const newCode = document.getElementById('newCodeInput').value;
         const coinValue = document.getElementById('coinValue').value;
 
@@ -343,11 +343,11 @@
         const codeRef = database.ref('activeCodes/' + newCode);
         codeRef.set(parseInt(coinValue))
             .then(() => {
-                alert('Code erfolgreich hinzugefügt!');
+                alert('Code erfolgreich generiert!');
                 loadActiveCodes();
             })
             .catch((error) => {
-                alert('Fehler beim Hinzufügen des Codes: ' + error.message);
+                alert('Fehler beim Generieren des Codes: ' + error.message);
             });
     }
 
