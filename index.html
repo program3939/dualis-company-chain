@@ -218,6 +218,7 @@
             <h4>Coin-Preis ändern:</h4>
             <input type="number" id="newCoinPrice" placeholder="Neuer Preis" step="0.01">
             <button onclick="changeCoinPrice()">Preis ändern</button>
+            <div id="priceChangeMessage" class="success-message" style="display:none;"></div>
             <h4>Neuen Code generieren:</h4>
             <div style="margin-top: 15px;">
                 <label>
@@ -226,6 +227,7 @@
                 <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code (oder leer lassen)">
                 <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)" min="1">
                 <button onclick="generateCode()">Code generieren</button>
+                <div id="codeGenerationMessage" class="success-message" style="display:none;"></div>
             </div>
             <h4>Aktive Codes:</h4>
             <table id="activeCodes">
@@ -278,14 +280,17 @@
 
     function changeCoinPrice() {
         const newPrice = parseFloat(document.getElementById('newCoinPrice').value);
+
         if (!isNaN(newPrice) && newPrice > 0) {
             firebase.database().ref('settings/coinPrice').set(newPrice)
                 .then(() => {
                     document.getElementById('coinPrice').innerText = newPrice.toFixed(2) + ' $';
-                    alert('Preis erfolgreich geändert!');
+                    document.getElementById('priceChangeMessage').style.display = 'block';
+                    document.getElementById('priceChangeMessage').innerText = 'Preis erfolgreich geändert!';
                 })
                 .catch(error => {
-                    alert('Fehler beim Ändern des Preises: ' + error.message);
+                    document.getElementById('priceChangeMessage').style.display = 'block';
+                    document.getElementById('priceChangeMessage').innerText = 'Fehler beim Ändern des Preises: ' + error.message;
                 });
         } else {
             alert('Bitte einen gültigen Preis eingeben.');
@@ -347,7 +352,9 @@
         let code = newCodeInput;
 
         if (!code || isNaN(coinValue) || coinValue <= 0) {
-            alert('Bitte gültigen Code und Wert eingeben.');
+            document.getElementById('codeGenerationMessage').style.display = 'block';
+            document.getElementById('codeGenerationMessage').className = 'error-message';
+            document.getElementById('codeGenerationMessage').innerText = 'Bitte gültigen Code und Wert eingeben.';
             return;
         }
 
@@ -358,11 +365,15 @@
 
         firebase.database().ref('codes/' + code).set(codeData)
             .then(() => {
-                alert('Code erfolgreich erstellt: ' + code);
+                document.getElementById('codeGenerationMessage').style.display = 'block';
+                document.getElementById('codeGenerationMessage').className = 'success-message';
+                document.getElementById('codeGenerationMessage').innerText = 'Code erfolgreich erstellt: ' + code;
                 loadActiveCodes();
             })
             .catch(error => {
-                alert('Fehler beim Erstellen des Codes: ' + error.message);
+                document.getElementById('codeGenerationMessage').style.display = 'block';
+                document.getElementById('codeGenerationMessage').className = 'error-message';
+                document.getElementById('codeGenerationMessage').innerText = 'Fehler beim Erstellen des Codes: ' + error.message;
             });
     }
 
