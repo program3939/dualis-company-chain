@@ -49,11 +49,12 @@
             font-family: 'Georgia', serif;
             border-radius: 6px;
             cursor: pointer;
+            margin-top: 10px;
         }
         button:hover {
             background: #7b6654;
         }
-        .leaderboard, .code-section {
+        .leaderboard, .code-section, .pending-transfers {
             margin-top: 30px;
         }
         .transaction-status, .code-message, .admin-message {
@@ -73,6 +74,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 30px;
         }
         table, th, td {
             border: 1px solid #ddd;
@@ -177,7 +179,28 @@
 
             <div id="admin-controls" style="display:none;">
                 <h3>Überweisungen Bestätigen</h3>
-                <ul id="pendingTransactions"></ul>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sender</th>
+                            <th>Empfänger</th>
+                            <th>Betrag</th>
+                            <th>Zeitpunkt</th>
+                            <th>Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingTransactions"></tbody>
+                </table>
+
+                <h3>Aktive Codes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Aktiver Code</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activeCodes"></tbody>
+                </table>
 
                 <h3>Code Generator</h3>
                 <button onclick="generateCode()">Code generieren</button>
@@ -217,10 +240,6 @@
                 }).then(() => {
                     document.getElementById("registerMessage").textContent = "Benutzer erfolgreich registriert!";
                     document.getElementById("registerMessage").classList.add('success-message');
-                    document.getElementById("discordName").value = '';
-                    document.getElementById("pin").value = '';
-                    document.getElementById("transferNumber").value = '';
-                    updateLeaderboard();
                 }).catch(() => {
                     document.getElementById("registerMessage").textContent = "Fehler bei der Registrierung.";
                 });
@@ -229,7 +248,7 @@
             }
         }
 
-        // Coins überweisen
+        // Coins Überweisen
         function transferCoins() {
             const fromUser = document.getElementById("fromUser").value;
             const toUser = document.getElementById("toUser").value;
@@ -244,6 +263,7 @@
                             fromUser: fromUser,
                             toUser: toUser,
                             amount: amount,
+                            timestamp: new Date().toLocaleString(),
                             status: "In Bearbeitung"
                         };
                         database.ref('pendingTransfers').push(pendingTransfer).then(() => {
@@ -285,6 +305,7 @@
             if (adminUser === "Dualis" && adminPass === "28102006") {
                 document.getElementById("admin-controls").style.display = "block";
                 loadPendingTransfers();
+                loadActiveCodes();
             } else {
                 alert("Ungültige Admin-Anmeldedaten");
             }
@@ -296,13 +317,15 @@
             database.ref('pendingTransfers').once('value', (snapshot) => {
                 snapshot.forEach((childSnapshot) => {
                     const transfer = childSnapshot.val();
-                    const li = document.createElement("li");
-                    li.textContent = `Von: ${transfer.fromUser}, An: ${transfer.toUser}, Betrag: ${transfer.amount}`;
-                    const confirmButton = document.createElement("button");
-                    confirmButton.textContent = "Bestätigen";
-                    confirmButton.onclick = () => confirmTransfer(childSnapshot.key);
-                    li.appendChild(confirmButton);
-                    pendingList.appendChild(li);
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${transfer.fromUser}</td>
+                        <td>${transfer.toUser}</td>
+                        <td>${transfer.amount}</td>
+                        <td>${transfer.timestamp}</td>
+                        <td><button onclick="confirmTransfer('${childSnapshot.key}')">Bestätigen</button></td>
+                    `;
+                    pendingList.appendChild(row);
                 });
             });
         }
@@ -333,6 +356,20 @@
             });
         }
 
+        // Aktive Codes laden
+        function loadActiveCodes() {
+            const activeCodesList = document.getElementById("activeCodes");
+            activeCodesList.innerHTML = '';
+            database.ref('codes').once('value', (snapshot) => {
+                snapshot.forEach((childSnapshot) => {
+                    const code = childSnapshot.val().code;
+                    const row = document.createElement("tr");
+                    row.innerHTML = `<td>${code}</td>`;
+                    activeCodesList.appendChild(row);
+                });
+            });
+        }
+
         // Code generieren
         function generateCode() {
             const newCode = Math.random().toString(36).substr(2, 8).toUpperCase();
@@ -351,9 +388,9 @@
             database.ref('users').orderByChild('coins').once('value', (snapshot) => {
                 snapshot.forEach((childSnapshot) => {
                     const user = childSnapshot.val();
-                    const li = document.createElement("li");
-                    li.innerHTML = `<td>${user.discordName}</td><td>${user.coins}</td><td>${user.transferNumber}</td>`;
-                    userList.appendChild(li);
+                    const row = document.createElement("tr");
+                    row.innerHTML = `<td>${user.discordName}</td><td>${user.coins}</td><td>${user.transferNumber}</td>`;
+                    userList.appendChild(row);
                 });
             });
         }
