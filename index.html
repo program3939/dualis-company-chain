@@ -18,7 +18,7 @@
             color: #5a4d3f;
         }
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             background: #fff;
             padding: 20px;
@@ -26,11 +26,12 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 40px;
         }
         label {
             display: block;
             margin-bottom: 8px;
+            font-weight: bold;
         }
         input {
             width: 100%;
@@ -63,26 +64,30 @@
             color: green;
         }
         .admin-panel {
-            display: none;
-            margin-top: 30px;
-        }
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-        ul li {
+            margin-top: 40px;
+            padding: 20px;
             background-color: #f5f0e1;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-        .classic-button {
-            background: #8c7564;
-            padding: 8px 12px;
-            border: none;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #8c7564;
             color: white;
-            border-radius: 5px;
-            margin: 10px 0;
+        }
+        td {
+            background-color: #fff;
+        }
+        .spacer {
+            margin-bottom: 30px;
         }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
@@ -108,6 +113,8 @@
             <p id="registerMessage" class="admin-message"></p>
         </div>
 
+        <div class="spacer"></div>
+
         <!-- Coins Überweisen -->
         <div id="transaction-form" class="form-group">
             <h2>Coins Überweisen</h2>
@@ -127,11 +134,26 @@
             <p id="transactionStatus" class="transaction-status"></p>
         </div>
 
+        <div class="spacer"></div>
+
         <!-- Leaderboard -->
         <div id="leaderboard" class="leaderboard">
             <h2>Leaderboard</h2>
-            <ul id="userList"></ul>
+            <table>
+                <thead>
+                    <tr>
+                        <th>DC-Name</th>
+                        <th>Coins</th>
+                        <th>Überweisungsnummer</th>
+                    </tr>
+                </thead>
+                <tbody id="userList">
+                    <!-- Hier werden Benutzer hinzugefügt -->
+                </tbody>
+            </table>
         </div>
+
+        <div class="spacer"></div>
 
         <!-- Code eintragen -->
         <div id="code-section" class="code-section">
@@ -142,6 +164,8 @@
             <p id="codeMessage" class="code-message"></p>
         </div>
 
+        <div class="spacer"></div>
+
         <!-- Admin-Panel -->
         <div id="admin-panel" class="admin-panel">
             <h2>Admin-Bereich</h2>
@@ -151,12 +175,14 @@
             <input type="password" id="adminPass">
             <button onclick="adminLogin()">Einloggen</button>
 
-            <h3>Überweisungen Bestätigen</h3>
-            <ul id="pendingTransactions"></ul>
+            <div id="admin-controls" style="display:none;">
+                <h3>Überweisungen Bestätigen</h3>
+                <ul id="pendingTransactions"></ul>
 
-            <h3>Code Generator</h3>
-            <button onclick="generateCode()">Code generieren</button>
-            <ul id="generatedCodes"></ul>
+                <h3>Code Generator</h3>
+                <button onclick="generateCode()">Code generieren</button>
+                <ul id="generatedCodes"></ul>
+            </div>
         </div>
     </div>
 
@@ -210,12 +236,10 @@
             const amount = parseInt(document.getElementById("amount").value);
             const transferNumberConfirm = document.getElementById("transferNumberConfirm").value;
 
-            if (fromUser && toUser && amount && transferNumberConfirm.length === 5) {
-                // Überprüfen, ob die Überweisungsnummer korrekt ist
-                const fromUserRef = database.ref('users').orderByChild('discordName').equalTo(fromUser);
-                fromUserRef.once('child_added').then(snapshot => {
-                    const user = snapshot.val();
-                    if (user.transferNumber === transferNumberConfirm) {
+            if (fromUser && toUser && amount > 0 && transferNumberConfirm) {
+                database.ref('users').orderByChild('discordName').equalTo(fromUser).once('child_added', (snapshot) => {
+                    const fromUserData = snapshot.val();
+                    if (fromUserData.transferNumber === transferNumberConfirm) {
                         const pendingTransfer = {
                             fromUser: fromUser,
                             toUser: toUser,
@@ -259,7 +283,7 @@
             const adminPass = document.getElementById("adminPass").value;
 
             if (adminUser === "Dualis" && adminPass === "28102006") {
-                document.getElementById("admin-panel").style.display = "block";
+                document.getElementById("admin-controls").style.display = "block";
                 loadPendingTransfers();
             } else {
                 alert("Ungültige Admin-Anmeldedaten");
@@ -328,7 +352,7 @@
                 snapshot.forEach((childSnapshot) => {
                     const user = childSnapshot.val();
                     const li = document.createElement("li");
-                    li.textContent = `${user.discordName}: ${user.coins} Coins`;
+                    li.innerHTML = `<td>${user.discordName}</td><td>${user.coins}</td><td>${user.transferNumber}</td>`;
                     userList.appendChild(li);
                 });
             });
