@@ -331,16 +331,20 @@
 
                 firebase.database().ref('leaderboard/' + discordName).set({
                     coins: currentCoins + coinValue
+                }).then(() => {
+                    message.style.display = 'block';
+                    message.className = 'success-message';
+                    message.innerText = 'Code erfolgreich eingelöst!';
+
+                    if (!multiUse) {
+                        firebase.database().ref('codes/' + code).remove();
+                    }
                 });
-
-                message.style.display = 'block';
-                message.className = 'success-message';
-                message.innerText = 'Code erfolgreich eingelöst!';
-
-                if (!multiUse) {
-                    firebase.database().ref('codes/' + code).remove();
-                }
             });
+        }).catch(error => {
+            message.style.display = 'block';
+            message.className = 'error-message';
+            message.innerText = 'Fehler beim Einlösen des Codes: ' + error.message;
         });
     }
 
@@ -351,10 +355,15 @@
 
         let code = newCodeInput;
 
-        if (!code || isNaN(coinValue) || coinValue <= 0) {
+        if (!code) {
+            // Generiere einen zufälligen 8-stelligen Code
+            code = Math.random().toString(36).substr(2, 8).toUpperCase();
+        }
+
+        if (isNaN(coinValue) || coinValue <= 0) {
             document.getElementById('codeGenerationMessage').style.display = 'block';
             document.getElementById('codeGenerationMessage').className = 'error-message';
-            document.getElementById('codeGenerationMessage').innerText = 'Bitte gültigen Code und Wert eingeben.';
+            document.getElementById('codeGenerationMessage').innerText = 'Bitte gültigen Wert für den Code eingeben.';
             return;
         }
 
@@ -363,18 +372,31 @@
             multiUse: multiUseCheckbox
         };
 
-        firebase.database().ref('codes/' + code).set(codeData)
-            .then(() => {
-                document.getElementById('codeGenerationMessage').style.display = 'block';
-                document.getElementById('codeGenerationMessage').className = 'success-message';
-                document.getElementById('codeGenerationMessage').innerText = 'Code erfolgreich erstellt: ' + code;
-                loadActiveCodes();
-            })
-            .catch(error => {
+        // Überprüfen, ob der Code bereits existiert
+        firebase.database().ref('codes/' + code).once('value').then(snapshot => {
+            if (snapshot.exists()) {
                 document.getElementById('codeGenerationMessage').style.display = 'block';
                 document.getElementById('codeGenerationMessage').className = 'error-message';
-                document.getElementById('codeGenerationMessage').innerText = 'Fehler beim Erstellen des Codes: ' + error.message;
-            });
+                document.getElementById('codeGenerationMessage').innerText = 'Der Code existiert bereits. Bitte einen anderen Code oder aktivieren Sie die Generierung eines neuen Codes wählen.';
+            } else {
+                firebase.database().ref('codes/' + code).set(codeData)
+                    .then(() => {
+                        document.getElementById('codeGenerationMessage').style.display = 'block';
+                        document.getElementById('codeGenerationMessage').className = 'success-message';
+                        document.getElementById('codeGenerationMessage').innerText = 'Code erfolgreich erstellt: ' + code;
+                        loadActiveCodes();
+                    })
+                    .catch(error => {
+                        document.getElementById('codeGenerationMessage').style.display = 'block';
+                        document.getElementById('codeGenerationMessage').className = 'error-message';
+                        document.getElementById('codeGenerationMessage').innerText = 'Fehler beim Erstellen des Codes: ' + error.message;
+                    });
+            }
+        }).catch(error => {
+            document.getElementById('codeGenerationMessage').style.display = 'block';
+            document.getElementById('codeGenerationMessage').className = 'error-message';
+            document.getElementById('codeGenerationMessage').innerText = 'Fehler beim Überprüfen des Codes: ' + error.message;
+        });
     }
 
     function loadActiveCodes() {
