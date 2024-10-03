@@ -4,286 +4,242 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dual-Coin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS-Stil bleibt gleich, da er nicht direkt mit dem Code-Generator zusammenhängt */
         body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f0f8f0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
             margin: 0;
-            padding: 0;
-            color: #333;
+            padding: 20px;
         }
-        /* ... Rest des CSS-Codes ... */
+        h1, h2 {
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            background: #28a745;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .leaderboard {
+            margin-top: 30px;
+        }
+        .transaction-status {
+            color: orange;
+        }
+        .admin-panel {
+            display: none;
+            margin-top: 20px;
+        }
     </style>
-
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
 </head>
-
 <body>
+    <div class="container">
+        <h1>Dual-Coin</h1>
 
-<header>
-    <h1>Dual-Coin</h1>
-</header>
-
-<main>
-    <section id="interactive-machine">
-        <h2>Interaktiver Automat</h2>
-        <p><strong>Aktueller Preis:</strong> <span id="coinPrice">10.00 $</span></p>
-        <input type="text" id="discordInput" maxlength="20" placeholder="Discord-Name eingeben">
-        <input type="text" id="codeInput" maxlength="8" placeholder="Code eingeben">
-        <button onclick="submitCode()">Einreichen</button>
-        <div id="message" class="error-message" style="display:none;"></div>
-    </section>
-
-    <section id="leaderboard">
-        <h2>Leaderboard</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Discord-Name</th>
-                    <th>Coins</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Leaderboard-Daten -->
-            </tbody>
-        </table>
-    </section>
-
-    <section id="admin-access">
-        <h2>Mitarbeiterzugang</h2>
-        <input type="text" id="adminUsername" placeholder="Benutzername">
-        <input type="password" id="adminPassword" placeholder="Passwort">
-        <button onclick="login()">Einloggen</button>
-        <div id="loginMessage" class="error-message" style="display:none;"></div>
-        <div id="adminPanel" style="display:none;">
-            <h3>Admin-Panel</h3>
-            <h4>Coin-Preis ändern:</h4>
-            <input type="number" id="newCoinPrice" placeholder="Neuer Preis" step="0.01">
-            <button onclick="changeCoinPrice()">Preis ändern</button>
-            <div id="priceChangeMessage" class="success-message" style="display:none;"></div>
-
-            <h4>Neuen Code generieren:</h4>
-            <div style="margin-top: 15px;">
-                <label>
-                    <input type="checkbox" id="multiUseCheckbox"> Mehrfach verwendbaren Code erstellen
-                </label>
-                <input type="text" id="newCodeInput" maxlength="8" placeholder="Neuen Code (oder leer lassen)">
-                <input type="number" id="coinValue" placeholder="Wert des Codes (Coins)" min="1">
-                <button onclick="generateCode()">Code generieren</button>
-                <div id="codeGenerationMessage" class="success-message" style="display:none;"></div>
-            </div>
-
-            <h4>Aktive Codes:</h4>
-            <table id="activeCodes">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Coin-Wert</th>
-                        <th>Status</th>
-                        <th>Aktionen</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Aktive Codes -->
-                </tbody>
-            </table>
+        <div id="user-form" class="form-group">
+            <h2>Benutzerregistrierung</h2>
+            <label for="discordName">Discord-Name:</label>
+            <input type="text" id="discordName" required>
+            <label for="pin">PIN (max. 8 Zeichen):</label>
+            <input type="text" id="pin" maxlength="8" required>
+            <button onclick="registerUser()">Registrieren</button>
         </div>
-    </section>
-</main>
 
-<footer>
-    <p>&copy; 2024 Dual-Coin. Alle Rechte vorbehalten.</p>
-</footer>
+        <div id="transaction-form" class="form-group">
+            <h2>Coins Überweisen</h2>
+            <label for="from">Von (Discord-Name):</label>
+            <input type="text" id="fromUser" required>
+            <label for="to">An (Discord-Name):</label>
+            <input type="text" id="toUser" required>
+            <label for="amount">Betrag:</label>
+            <input type="number" id="amount" required>
+            <button onclick="transferCoins()">Überweisen</button>
+            <p id="transactionStatus" class="transaction-status"></p>
+        </div>
 
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
-        authDomain: "dualis-company-chain.firebaseapp.com",
-        databaseURL: "https://dualis-company-chain-default-rtdb.firebaseio.com",
-        projectId: "dualis-company-chain",
-        storageBucket: "dualis-company-chain.appspot.com",
-        messagingSenderId: "521000433736",
-        appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d",
-        measurementId: "G-JEYQSXL8Z9"
-    };
+        <div id="leaderboard" class="leaderboard">
+            <h2>Leaderboard</h2>
+            <ul id="userList"></ul>
+        </div>
 
-    firebase.initializeApp(firebaseConfig);
+        <div class="admin-panel" id="admin-panel">
+            <h2>Admin-Bereich</h2>
+            <label for="adminUser">Benutzername:</label>
+            <input type="text" id="adminUser">
+            <label for="adminPass">Passwort:</label>
+            <input type="password" id="adminPass">
+            <button onclick="adminLogin()">Einloggen</button>
+            <h3>Überweisungen Bestätigen</h3>
+            <ul id="pendingTransactions"></ul>
+        </div>
+    </div>
 
-    function login() {
-        const username = document.getElementById('adminUsername').value.trim();
-        const password = document.getElementById('adminPassword').value;
+    <script>
+        // Firebase-Konfiguration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
+            authDomain: "dualis-company-chain.firebaseapp.com",
+            databaseURL: "https://dualis-company-chain-default-rtdb.firebaseio.com",
+            projectId: "dualis-company-chain",
+            storageBucket: "dualis-company-chain.appspot.com",
+            messagingSenderId: "521000433736",
+            appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d",
+            measurementId: "G-JEYQSXL8Z9"
+        };
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-        if (username === 'Dualis' && password === '28102006') {
-            document.getElementById('adminPanel').style.display = 'block';
-            document.getElementById('loginMessage').style.display = 'none';
-        } else {
-            document.getElementById('loginMessage').style.display = 'block';
-            document.getElementById('loginMessage').innerText = 'Ungültiger Benutzername oder Passwort!';
-        }
-    }
+        // Benutzerregistrierung
+        function registerUser() {
+            const discordName = document.getElementById("discordName").value;
+            const pin = document.getElementById("pin").value;
 
-    function changeCoinPrice() {
-        const newPrice = parseFloat(document.getElementById('newCoinPrice').value);
-
-        if (!isNaN(newPrice) && newPrice > 0) {
-            firebase.database().ref('settings/coinPrice').set(newPrice)
-                .then(() => {
-                    document.getElementById('coinPrice').innerText = newPrice.toFixed(2) + ' $';
-                    document.getElementById('priceChangeMessage').style.display = 'block';
-                    document.getElementById('priceChangeMessage').innerText = 'Preis erfolgreich geändert!';
-                })
-                .catch(error => {
-                    document.getElementById('priceChangeMessage').style.display = 'block';
-                    document.getElementById('priceChangeMessage').innerText = 'Fehler beim Ändern des Preises: ' + error.message;
-                });
-        } else {
-            alert('Bitte einen gültigen Preis eingeben.');
-        }
-    }
-
-    // Initiale Preisabfrage
-    firebase.database().ref('settings/coinPrice').once('value').then(snapshot => {
-        const coinPrice = snapshot.val();
-        document.getElementById('coinPrice').innerText = coinPrice.toFixed(2) + ' $';
-    });
-
-    // Einmalige und mehrfach verwendbare Codes behandeln
-    function submitCode() {
-        const discordName = document.getElementById('discordInput').value.trim();
-        const code = document.getElementById('codeInput').value.trim();
-        const message = document.getElementById('message');
-
-        if (!discordName || !code) {
-            message.style.display = 'block';
-            message.className = 'error-message';
-            message.innerText = 'Bitte fülle alle Felder aus!';
-            return;
-        }
-
-        firebase.database().ref('codes/' + code).once('value').then(snapshot => {
-            if (!snapshot.exists()) {
-                message.style.display = 'block';
-                message.innerText = 'Ungültiger Code!';
-                return;
-            }
-
-            const coinValue = snapshot.val().value;
-            const multiUse = snapshot.val().multiUse;
-
-            firebase.database().ref('leaderboard/' + discordName).once('value').then(userSnapshot => {
-                const currentCoins = userSnapshot.val() ? userSnapshot.val().coins : 0;
-
-                firebase.database().ref('leaderboard/' + discordName).set({
-                    coins: currentCoins + coinValue
+            if (discordName && pin) {
+                const userId = discordName + "_" + Date.now();
+                database.ref('users/' + userId).set({
+                    discordName: discordName,
+                    pin: pin,
+                    coins: 0
                 }).then(() => {
-                    message.style.display = 'block';
-                    message.className = 'success-message';
-                    message.innerText = 'Code erfolgreich eingelöst!';
+                    alert("Benutzer erfolgreich registriert!");
+                    document.getElementById("discordName").value = '';
+                    document.getElementById("pin").value = '';
+                    updateLeaderboard();
+                });
+            }
+        }
 
-                    if (!multiUse) {
-                        firebase.database().ref('codes/' + code).remove();
+        // Coins überweisen
+        function transferCoins() {
+            const fromUser = document.getElementById("fromUser").value;
+            const toUser = document.getElementById("toUser").value;
+            const amount = parseInt(document.getElementById("amount").value);
+
+            if (fromUser && toUser && amount) {
+                database.ref('transactions/').push({
+                    fromUser: fromUser,
+                    toUser: toUser,
+                    amount: amount,
+                    status: 'pending'
+                }).then(() => {
+                    document.getElementById("transactionStatus").innerText = "In Bearbeitung...";
+                    setTimeout(() => {
+                        document.getElementById("transactionStatus").innerText = "Überweisung abgeschlossen!";
+                        updateLeaderboard();
+                    }, 3000); // Simuliere Bestätigung nach 3 Sekunden
+                });
+            }
+        }
+
+        // Leaderboard aktualisieren
+        function updateLeaderboard() {
+            const userList = document.getElementById("userList");
+            userList.innerHTML = '';
+
+            database.ref('users/').once('value', (snapshot) => {
+                snapshot.forEach(childSnapshot => {
+                    const user = childSnapshot.val();
+                    const li = document.createElement("li");
+                    li.textContent = `${user.discordName}: ${user.coins} Coins`;
+                    userList.appendChild(li);
+                });
+            });
+        }
+
+        // Admin-Login
+        function adminLogin() {
+            const username = document.getElementById("adminUser").value;
+            const password = document.getElementById("adminPass").value;
+
+            if (username === 'Dualis' && password === '28102006') {
+                document.getElementById("admin-panel").style.display = 'block';
+                fetchPendingTransactions();
+            } else {
+                alert("Ungültige Anmeldedaten");
+            }
+        }
+
+        // Überweisungen abrufen
+        function fetchPendingTransactions() {
+            const pendingTransactionsList = document.getElementById("pendingTransactions");
+            pendingTransactionsList.innerHTML = '';
+
+            database.ref('transactions/').orderByChild('status').equalTo('pending').once('value', (snapshot) => {
+                snapshot.forEach(childSnapshot => {
+                    const transaction = childSnapshot.val();
+                    const li = document.createElement("li");
+                    li.textContent = `Von: ${transaction.fromUser}, An: ${transaction.toUser}, Betrag: ${transaction.amount}`;
+                    const confirmButton = document.createElement("button");
+                    confirmButton.innerText = "Bestätigen";
+                    confirmButton.onclick = () => confirmTransaction(childSnapshot.key);
+                    li.appendChild(confirmButton);
+                    pendingTransactionsList.appendChild(li);
+                });
+            });
+        }
+
+        // Überweisung bestätigen
+        function confirmTransaction(transactionId) {
+            database.ref('transactions/' + transactionId).once('value').then(snapshot => {
+                const transaction = snapshot.val();
+                const fromUserRef = database.ref('users').orderByChild('discordName').equalTo(transaction.fromUser);
+                const toUserRef = database.ref('users').orderByChild('discordName').equalTo(transaction.toUser);
+
+                fromUserRef.once('child_added').then(fromUserSnapshot => {
+                    const fromUserData = fromUserSnapshot.val();
+                    const newCoinBalance = fromUserData.coins - transaction.amount;
+
+                    if (newCoinBalance >= 0) {
+                        // Update sender's coin balance
+                        fromUserSnapshot.ref.update({ coins: newCoinBalance });
+
+                        toUserRef.once('child_added').then(toUserSnapshot => {
+                            const toUserData = toUserSnapshot.val();
+                            const newCoins = toUserData.coins + transaction.amount;
+
+                            // Update receiver's coin balance
+                            toUserSnapshot.ref.update({ coins: newCoins });
+
+                            // Update transaction status
+                            snapshot.ref.update({ status: 'completed' });
+                            alert("Überweisung bestätigt!");
+                            fetchPendingTransactions();
+                            updateLeaderboard();
+                        });
+                    } else {
+                        alert("Nicht genügend Coins!");
                     }
                 });
             });
-        }).catch(error => {
-            message.style.display = 'block';
-            message.className = 'error-message';
-            message.innerText = 'Fehler beim Einlösen des Codes: ' + error.message;
-        });
-    }
-
-    function generateCode() {
-        const multiUseCheckbox = document.getElementById('multiUseCheckbox').checked;
-        const newCodeInput = document.getElementById('newCodeInput').value.trim();
-        const coinValue = parseInt(document.getElementById('coinValue').value);
-
-        let code = newCodeInput;
-
-        // Generiere einen zufälligen 8-stelligen Code, wenn kein Code eingegeben wurde
-        if (!code) {
-            code = Math.random().toString(36).substr(2, 8).toUpperCase();
         }
-
-        if (isNaN(coinValue) || coinValue <= 0) {
-            document.getElementById('codeGenerationMessage').style.display = 'block';
-            document.getElementById('codeGenerationMessage').className = 'error-message';
-            document.getElementById('codeGenerationMessage').innerText = 'Bitte gültigen Wert für den Code eingeben.';
-            return;
-        }
-
-        const codeData = {
-            value: coinValue,
-            multiUse: multiUseCheckbox
-        };
-
-        // Überprüfe, ob der Code bereits existiert
-        firebase.database().ref('codes/' + code).once('value').then(snapshot => {
-            if (snapshot.exists()) {
-                document.getElementById('codeGenerationMessage').style.display = 'block';
-                document.getElementById('codeGenerationMessage').className = 'error-message';
-                document.getElementById('codeGenerationMessage').innerText = 'Der Code existiert bereits. Bitte einen anderen Code oder aktivieren Sie die Generierung eines neuen Codes wählen.';
-            } else {
-                // Schreibe den Code in die Datenbank
-                firebase.database().ref('codes/' + code).set(codeData)
-                    .then(() => {
-                        document.getElementById('codeGenerationMessage').style.display = 'block';
-                        document.getElementById('codeGenerationMessage').className = 'success-message';
-                        document.getElementById('codeGenerationMessage').innerText = 'Code erfolgreich erstellt: ' + code;
-                        loadActiveCodes();
-                    })
-                    .catch(error => {
-                        document.getElementById('codeGenerationMessage').style.display = 'block';
-                        document.getElementById('codeGenerationMessage').className = 'error-message';
-                        document.getElementById('codeGenerationMessage').innerText = 'Fehler beim Erstellen des Codes: ' + error.message;
-                    });
-            }
-        }).catch(error => {
-            document.getElementById('codeGenerationMessage').style.display = 'block';
-            document.getElementById('codeGenerationMessage').className = 'error-message';
-            document.getElementById('codeGenerationMessage').innerText = 'Fehler beim Überprüfen des Codes: ' + error.message;
-        });
-    }
-
-    function loadActiveCodes() {
-        firebase.database().ref('codes').once('value').then(snapshot => {
-            const codesTableBody = document.querySelector('#activeCodes tbody');
-            codesTableBody.innerHTML = ''; // Clear existing rows
-
-            snapshot.forEach(codeSnapshot => {
-                const code = codeSnapshot.key;
-                const data = codeSnapshot.val();
-                const row = document.createElement('tr');
-
-                row.innerHTML = `
-                    <td>${code}</td>
-                    <td>${data.value}</td>
-                    <td>${data.multiUse ? 'Mehrfach verwendbar' : 'Einmal verwendbar'}</td>
-                    <td><button class="remove-btn" onclick="removeCode('${code}')">Entfernen</button></td>
-                `;
-                codesTableBody.appendChild(row);
-            });
-        });
-    }
-
-    function removeCode(code) {
-        firebase.database().ref('codes/' + code).remove()
-            .then(() => {
-                alert('Code erfolgreich entfernt.');
-                loadActiveCodes();
-            })
-            .catch(error => {
-                alert('Fehler beim Entfernen des Codes: ' + error.message);
-            });
-    }
-
-    // Führt die Funktion zum Laden aktiver Codes beim Laden der Seite aus
-    window.onload = loadActiveCodes;
-
-</script>
-
+    </script>
 </body>
 </html>
