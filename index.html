@@ -55,6 +55,10 @@
             margin-bottom: 10px;
         }
 
+        h4 {
+            font-size: 1.2em;
+        }
+
         input[type="text"], input[type="number"], input[type="password"] {
             width: calc(100% - 20px);
             padding: 15px;
@@ -64,6 +68,7 @@
             border-radius: 8px;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
             transition: border-color 0.3s;
+            position: relative; /* Added for button positioning */
         }
 
         input:focus {
@@ -143,8 +148,9 @@
         .toggle-password {
             cursor: pointer;
             position: absolute;
-            margin-top: 10px;
-            margin-left: -40px;
+            right: 10px; /* Right positioning */
+            top: 50%;
+            transform: translateY(-50%);
             background: none;
             border: none;
         }
@@ -266,14 +272,11 @@
         projectId: "dualis-company-chain",
         storageBucket: "dualis-company-chain.appspot.com",
         messagingSenderId: "521000433736",
-        appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d",
-        measurementId: "G-JEYQSXL8Z9"
+        appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    firebase.initializeApp(firebaseConfig);
 
-    // Admin Login mit Firebase Authentication
     function login() {
         const username = document.getElementById('adminUsername').value.trim();
         const password = document.getElementById('adminPassword').value;
