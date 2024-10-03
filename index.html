@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,12 +12,17 @@
             color: #333;
             margin: 0;
             padding: 20px;
+            border: 5px double #8c7564;
         }
-        h1, h2 {
+
+        h1,
+        h2 {
             text-align: center;
             font-family: 'Times New Roman', serif;
             color: #5a4d3f;
+            text-shadow: 1px 1px 2px #c2b2a1;
         }
+
         .container {
             max-width: 1000px;
             margin: 0 auto;
@@ -25,14 +31,19 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
+
         .form-group {
             margin-bottom: 40px;
+            border-bottom: 2px solid #8c7564;
+            padding-bottom: 20px;
         }
+
         label {
             display: block;
             margin-bottom: 8px;
             font-weight: bold;
         }
+
         input {
             width: 100%;
             padding: 10px;
@@ -40,6 +51,7 @@
             border-radius: 6px;
             font-family: 'Arial', sans-serif;
         }
+
         button {
             padding: 12px 18px;
             border: none;
@@ -51,19 +63,28 @@
             cursor: pointer;
             margin-top: 10px;
         }
+
         button:hover {
             background: #7b6654;
         }
-        .leaderboard, .code-section, .pending-transfers {
+
+        .leaderboard,
+        .code-section,
+        .pending-transfers {
             margin-top: 30px;
         }
-        .transaction-status, .code-message, .admin-message {
+
+        .transaction-status,
+        .code-message,
+        .admin-message {
             color: red;
             margin-top: 15px;
         }
+
         .success-message {
             color: green;
         }
+
         .admin-panel {
             margin-top: 40px;
             padding: 20px;
@@ -71,30 +92,64 @@
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
         }
-        table, th, td {
+
+        table,
+        th,
+        td {
             border: 1px solid #ddd;
             padding: 12px;
             text-align: left;
         }
+
         th {
             background-color: #8c7564;
             color: white;
         }
+
         td {
             background-color: #fff;
         }
+
         .spacer {
             margin-bottom: 30px;
+        }
+
+        /* Styling für die Eingabefelder und Buttons */
+        input:focus {
+            border-color: #8c7564;
+            outline: none;
+        }
+
+        button:focus {
+            outline: none;
+        }
+
+        /* Responsives Design */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            h1,
+            h2 {
+                font-size: 24px;
+            }
+
+            button {
+                width: 100%;
+            }
         }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
 </head>
+
 <body>
     <div class="container">
         <h1>Dual-Coin</h1>
@@ -221,6 +276,8 @@
             appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d",
             measurementId: "G-JEYQSXL8Z9"
         };
+
+        // Firebase initialisieren
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
@@ -230,16 +287,19 @@
             const pin = document.getElementById("pin").value;
             const transferNumber = document.getElementById("transferNumber").value;
 
-            if (discordName && pin && transferNumber.length === 5) {
-                const userId = discordName + "_" + Date.now();
-                database.ref('users/' + userId).set({
+            if (discordName && pin && transferNumber) {
+                const newUser = {
                     discordName: discordName,
                     pin: pin,
                     transferNumber: transferNumber,
                     coins: 0
-                }).then(() => {
-                    document.getElementById("registerMessage").textContent = "Benutzer erfolgreich registriert!";
-                    document.getElementById("registerMessage").classList.add('success-message');
+                };
+                database.ref('users').push(newUser).then(() => {
+                    document.getElementById("registerMessage").textContent = "Erfolgreich registriert!";
+                    document.getElementById("discordName").value = '';
+                    document.getElementById("pin").value = '';
+                    document.getElementById("transferNumber").value = '';
+                    updateLeaderboard(); // Direktes Hinzufügen zum Leaderboard
                 }).catch(() => {
                     document.getElementById("registerMessage").textContent = "Fehler bei der Registrierung.";
                 });
@@ -258,7 +318,7 @@
             if (fromUser && toUser && amount > 0 && transferNumberConfirm) {
                 database.ref('users').orderByChild('discordName').equalTo(fromUser).once('child_added', (snapshot) => {
                     const fromUserData = snapshot.val();
-                    if (fromUserData.transferNumber === transferNumberConfirm) {
+                    if (fromUserData.transferNumber == transferNumberConfirm) {
                         const pendingTransfer = {
                             fromUser: fromUser,
                             toUser: toUser,
@@ -268,6 +328,11 @@
                         };
                         database.ref('pendingTransfers').push(pendingTransfer).then(() => {
                             document.getElementById("transactionStatus").textContent = "Überweisung in Bearbeitung.";
+                            // Felder leeren nach erfolgreicher Überweisung
+                            document.getElementById("fromUser").value = '';
+                            document.getElementById("toUser").value = '';
+                            document.getElementById("amount").value = '';
+                            document.getElementById("transferNumberConfirm").value = '';
                         }).catch(() => {
                             document.getElementById("transactionStatus").textContent = "Fehler bei der Überweisung.";
                         });
@@ -288,6 +353,8 @@
                     if (snapshot.exists()) {
                         document.getElementById("codeMessage").textContent = "Code erfolgreich eingelöst!";
                         document.getElementById("codeMessage").classList.add('success-message');
+                        // Code-Feld leeren
+                        document.getElementById("codeInput").value = '';
                     } else {
                         document.getElementById("codeMessage").textContent = "Ungültiger Code.";
                     }
@@ -398,4 +465,5 @@
         updateLeaderboard();
     </script>
 </body>
+
 </html>
