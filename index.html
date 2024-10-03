@@ -120,7 +120,6 @@
             margin-bottom: 30px;
         }
 
-        /* Styling für die Eingabefelder und Buttons */
         input:focus {
             border-color: #8c7564;
             outline: none;
@@ -130,7 +129,6 @@
             outline: none;
         }
 
-        /* Responsives Design */
         @media (max-width: 600px) {
             body {
                 padding: 10px;
@@ -292,10 +290,11 @@
                     discordName: discordName,
                     pin: pin,
                     transferNumber: transferNumber,
-                    coins: 0
+                    coins: 100 // Initiale Coins, z.B. 100
                 };
                 database.ref('users').push(newUser).then(() => {
                     document.getElementById("registerMessage").textContent = "Erfolgreich registriert!";
+                    document.getElementById("registerMessage").classList.add('success-message');
                     document.getElementById("discordName").value = '';
                     document.getElementById("pin").value = '';
                     document.getElementById("transferNumber").value = '';
@@ -328,7 +327,6 @@
                         };
                         database.ref('pendingTransfers').push(pendingTransfer).then(() => {
                             document.getElementById("transactionStatus").textContent = "Überweisung in Bearbeitung.";
-                            // Felder leeren nach erfolgreicher Überweisung
                             document.getElementById("fromUser").value = '';
                             document.getElementById("toUser").value = '';
                             document.getElementById("amount").value = '';
@@ -358,6 +356,8 @@
                     } else {
                         document.getElementById("codeMessage").textContent = "Ungültiger Code.";
                     }
+                }).catch(() => {
+                    document.getElementById("codeMessage").textContent = "Fehler beim Einlösen des Codes.";
                 });
             } else {
                 document.getElementById("codeMessage").textContent = "Bitte einen Code eingeben.";
@@ -419,7 +419,11 @@
                     } else {
                         alert("Nicht genügend Coins.");
                     }
+                }).catch(() => {
+                    alert("Fehler beim Bestätigen der Überweisung.");
                 });
+            }).catch(() => {
+                alert("Fehler beim Laden der Überweisung.");
             });
         }
 
@@ -434,6 +438,8 @@
                     row.innerHTML = `<td>${code}</td>`;
                     activeCodesList.appendChild(row);
                 });
+            }).catch(() => {
+                alert("Fehler beim Laden der aktiven Codes.");
             });
         }
 
@@ -445,6 +451,9 @@
                 const li = document.createElement("li");
                 li.textContent = newCode;
                 generatedList.appendChild(li);
+                alert("Code erfolgreich generiert: " + newCode);
+            }).catch(() => {
+                alert("Fehler beim Generieren des Codes.");
             });
         }
 
@@ -459,6 +468,8 @@
                     row.innerHTML = `<td>${user.discordName}</td><td>${user.coins}</td><td>${user.transferNumber}</td>`;
                     userList.appendChild(row);
                 });
+            }).catch(() => {
+                alert("Fehler beim Aktualisieren des Leaderboards.");
             });
         }
 
