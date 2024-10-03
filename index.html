@@ -169,6 +169,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 </head>
 
 <body>
@@ -249,18 +250,60 @@
 
 <script>
     const firebaseConfig = {
-        apiKey: "DEIN_API_KEY",
-        authDomain: "DEIN_PROJEKT.firebaseapp.com",
-        databaseURL: "https://DEIN_PROJEKT.firebaseio.com",
-        projectId: "DEIN_PROJEKT",
-        storageBucket: "DEIN_PROJEKT.appspot.com",
-        messagingSenderId: "DEIN_SENDER_ID",
-        appId: "DEINE_APP_ID"
+        apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
+        authDomain: "dualis-company-chain.firebaseapp.com",
+        databaseURL: "https://dualis-company-chain-default-rtdb.firebaseio.com",
+        projectId: "dualis-company-chain",
+        storageBucket: "dualis-company-chain.appspot.com",
+        messagingSenderId: "521000433736",
+        appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d"
     };
 
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // Admin Login mit Firebase Authentication
+    function login() {
+        const username = document.getElementById('adminUsername').value;
+        const password = document.getElementById('adminPassword').value;
+        const loginMessage = document.getElementById('loginMessage');
+        const adminPanel = document.getElementById('adminPanel');
+
+        firebase.auth().signInWithEmailAndPassword(username, password)
+            .then((userCredential) => {
+                adminPanel.style.display = 'block';
+                loginMessage.style.display = 'none';
+            })
+            .catch((error) => {
+                loginMessage.style.display = 'block';
+                loginMessage.innerText = 'Ungültiger Benutzername oder Passwort!';
+            });
+    }
+
+    // Coin-Preis ändern und in Firebase speichern
+    function changeCoinPrice() {
+        const newPrice = parseFloat(document.getElementById('newCoinPrice').value);
+        if (newPrice) {
+            firebase.database().ref('settings/coinPrice').set(newPrice)
+                .then(() => {
+                    document.getElementById('coinPrice').innerText = newPrice.toFixed(2) + ' $';
+                    alert('Preis erfolgreich geändert!');
+                })
+                .catch(error => {
+                    alert('Fehler beim Ändern des Preises: ' + error.message);
+                });
+        } else {
+            alert('Bitte einen gültigen Preis eingeben.');
+        }
+    }
+
+    // Initiale Preisabfrage
+    firebase.database().ref('settings/coinPrice').once('value').then(snapshot => {
+        const coinPrice = snapshot.val();
+        document.getElementById('coinPrice').innerText = coinPrice.toFixed(2) + ' $';
+    });
+
+    // Einmalige und mehrfach verwendbare Codes behandeln
     function submitCode() {
         const discordName = document.getElementById('discordInput').value.trim();
         const code = document.getElementById('codeInput').value.trim();
@@ -288,128 +331,19 @@
 
                 firebase.database().ref('leaderboard/' + discordName).set({
                     coins: currentCoins + coinValue
-                }).then(() => {
-                    message.style.display = 'block';
-                    message.className = 'success-message';
-                    message.innerText = 'Code erfolgreich eingelöst!';
-
-                    if (!multiUse) {
-                        removeCode(code); // Code löschen, wenn nicht mehrfach verwendbar
-                    }
-
-                    loadLeaderboard();
-                }).catch(error => {
-                    message.style.display = 'block';
-                    message.innerText = 'Fehler beim Einlösen des Codes: ' + error.message;
                 });
+
+                message.style.display = 'block';
+                message.className = 'success-message';
+                message.innerText = 'Code erfolgreich eingelöst!';
+
+                if (!multiUse) {
+                    firebase.database().ref('codes/' + code).remove();
+                }
             });
         });
-    }
-
-    function changeCoinPrice() {
-        const newPrice = document.getElementById('newCoinPrice').value;
-        if (newPrice) {
-            document.getElementById('coinPrice').innerText = newPrice + ' $';
-            alert('Preis erfolgreich geändert!');
-        } else {
-            alert('Bitte einen gültigen Preis eingeben.');
-        }
-    }
-
-    function generateCode() {
-        const randomCodeCheckbox = document.getElementById('randomCodeCheckbox').checked;
-        const multiUseCheckbox = document.getElementById('multiUseCheckbox').checked;
-        const newCode = document.getElementById('newCodeInput').value || generateRandomCode();
-        const coinValue = document.getElementById('coinValue').value;
-
-        if (!newCode || !coinValue) {
-            alert('Bitte fülle alle Felder aus oder generiere einen Code!');
-            return;
-        }
-
-        const codeData = {
-            code: newCode,
-            value: coinValue,
-            multiUse: multiUseCheckbox
-        };
-
-        const codeRef = firebase.database().ref('codes/' + newCode);
-        codeRef.set(codeData)
-            .then(() => {
-                alert('Code erfolgreich generiert!');
-                loadActiveCodes();
-            })
-            .catch(error => {
-                alert('Fehler beim Generieren des Codes: ' + error.message);
-            });
-    }
-
-    function loadActiveCodes() {
-        const activeCodesTable = document.getElementById('activeCodes').getElementsByTagName('tbody')[0];
-        activeCodesTable.innerHTML = '';
-
-        firebase.database().ref('codes').once('value').then(snapshot => {
-            snapshot.forEach(childSnapshot => {
-                const childData = childSnapshot.val();
-                const row = activeCodesTable.insertRow();
-                row.insertCell(0).innerText = childData.code;
-                row.insertCell(1).innerText = childData.value;
-                row.insertCell(2).innerText = childData.multiUse ? 'Mehrfach verwendbar' : 'Einmal verwendbar';
-                const deleteButton = document.createElement('button');
-                deleteButton.innerText = 'Löschen';
-                deleteButton.className = 'remove-btn';
-                deleteButton.onclick = () => removeCode(childSnapshot.key);
-                const actionsCell = row.insertCell(3);
-                actionsCell.appendChild(deleteButton);
-            });
-        });
-    }
-
-    function removeCode(code) {
-        firebase.database().ref('codes/' + code).remove()
-            .then(() => {
-                alert('Code erfolgreich gelöscht!');
-                loadActiveCodes();
-            })
-            .catch(error => {
-                alert('Fehler beim Löschen des Codes: ' + error.message);
-            });
-    }
-
-    function loadLeaderboard() {
-        const leaderboardTable = document.getElementById('leaderboard').getElementsByTagName('tbody')[0];
-        leaderboardTable.innerHTML = '';
-
-        firebase.database().ref('leaderboard').once('value').then(snapshot => {
-            snapshot.forEach(childSnapshot => {
-                const childData = childSnapshot.val();
-                const row = leaderboardTable.insertRow();
-                row.insertCell(0).innerText = childSnapshot.key;
-                row.insertCell(1).innerText = childData.coins;
-            });
-        });
-    }
-
-    function generateRandomCode() {
-        return Math.random().toString(36).substr(2, 8).toUpperCase();
-    }
-
-    function login() {
-        const username = document.getElementById('adminUsername').value;
-        const password = document.getElementById('adminPassword').value;
-        const loginMessage = document.getElementById('loginMessage');
-        const adminPanel = document.getElementById('adminPanel');
-
-        // Füge hier die Logik zur Überprüfung des Benutzernamens und des Passworts hinzu
-        if (username === "admin" && password === "password") { // Beispielwerte
-            adminPanel.style.display = 'block';
-            loginMessage.style.display = 'none';
-        } else {
-            loginMessage.style.display = 'block';
-            loginMessage.innerText = 'Ungültiger Benutzername oder Passwort!';
-        }
     }
 </script>
 
 </body>
-    </html>
+</html>
