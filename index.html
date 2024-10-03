@@ -140,6 +140,15 @@
             background-color: #d32f2f;
         }
 
+        .toggle-password {
+            cursor: pointer;
+            position: absolute;
+            margin-top: 10px;
+            margin-left: -40px;
+            background: none;
+            border: none;
+        }
+
         @media (max-width: 768px) {
             main {
                 padding: 20px 10px;
@@ -207,6 +216,7 @@
         <h2>Mitarbeiterzugang</h2>
         <input type="text" id="adminUsername" placeholder="Benutzername">
         <input type="password" id="adminPassword" placeholder="Passwort">
+        <button class="toggle-password" onclick="togglePasswordVisibility()">👁️</button>
         <button onclick="login()">Einloggen</button>
         <div id="loginMessage" class="error-message" style="display:none;"></div>
         <div id="adminPanel" style="display:none;">
@@ -256,7 +266,8 @@
         projectId: "dualis-company-chain",
         storageBucket: "dualis-company-chain.appspot.com",
         messagingSenderId: "521000433736",
-        appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d"
+        appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d",
+        measurementId: "G-JEYQSXL8Z9"
     };
 
     const app = firebase.initializeApp(firebaseConfig);
@@ -264,26 +275,27 @@
 
     // Admin Login mit Firebase Authentication
     function login() {
-        const username = document.getElementById('adminUsername').value;
+        const username = document.getElementById('adminUsername').value.trim();
         const password = document.getElementById('adminPassword').value;
-        const loginMessage = document.getElementById('loginMessage');
-        const adminPanel = document.getElementById('adminPanel');
 
-        firebase.auth().signInWithEmailAndPassword(username, password)
-            .then((userCredential) => {
-                adminPanel.style.display = 'block';
-                loginMessage.style.display = 'none';
-            })
-            .catch((error) => {
-                loginMessage.style.display = 'block';
-                loginMessage.innerText = 'Ungültiger Benutzername oder Passwort!';
-            });
+        if (username === 'Dualis' && password === '28102006') {
+            document.getElementById('adminPanel').style.display = 'block';
+            document.getElementById('loginMessage').style.display = 'none';
+        } else {
+            document.getElementById('loginMessage').style.display = 'block';
+            document.getElementById('loginMessage').innerText = 'Ungültiger Benutzername oder Passwort!';
+        }
     }
 
-    // Coin-Preis ändern und in Firebase speichern
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('adminPassword');
+        const type = passwordInput.type === "password" ? "text" : "password";
+        passwordInput.type = type;
+    }
+
     function changeCoinPrice() {
         const newPrice = parseFloat(document.getElementById('newCoinPrice').value);
-        if (newPrice) {
+        if (!isNaN(newPrice) && newPrice > 0) {
             firebase.database().ref('settings/coinPrice').set(newPrice)
                 .then(() => {
                     document.getElementById('coinPrice').innerText = newPrice.toFixed(2) + ' $';
@@ -343,6 +355,73 @@
             });
         });
     }
+
+    function generateCode() {
+        const randomCodeCheckbox = document.getElementById('randomCodeCheckbox').checked;
+        const multiUseCheckbox = document.getElementById('multiUseCheckbox').checked;
+        const newCodeInput = document.getElementById('newCodeInput').value.trim();
+        const coinValue = parseInt(document.getElementById('coinValue').value);
+
+        let code = newCodeInput;
+        if (randomCodeCheckbox) {
+            code = Math.random().toString(36).substring(2, 10).toUpperCase();
+        }
+
+        if (!code || isNaN(coinValue) || coinValue <= 0) {
+            alert('Bitte gültigen Code und Wert eingeben.');
+            return;
+        }
+
+        const codeData = {
+            value: coinValue,
+            multiUse: multiUseCheckbox
+        };
+
+        firebase.database().ref('codes/' + code).set(codeData)
+            .then(() => {
+                alert('Code erfolgreich erstellt: ' + code);
+                loadActiveCodes();
+            })
+            .catch(error => {
+                alert('Fehler beim Erstellen des Codes: ' + error.message);
+            });
+    }
+
+    function loadActiveCodes() {
+        firebase.database().ref('codes').once('value').then(snapshot => {
+            const codesTableBody = document.querySelector('#activeCodes tbody');
+            codesTableBody.innerHTML = ''; // Clear existing rows
+
+            snapshot.forEach(codeSnapshot => {
+                const code = codeSnapshot.key;
+                const data = codeSnapshot.val();
+                const row = document.createElement('tr');
+
+                row.innerHTML = `
+                    <td>${code}</td>
+                    <td>${data.value}</td>
+                    <td>${data.multiUse ? 'Mehrfach verwendbar' : 'Einmal verwendbar'}</td>
+                    <td><button class="remove-btn" onclick="removeCode('${code}')">Entfernen</button></td>
+                `;
+                codesTableBody.appendChild(row);
+            });
+        });
+    }
+
+    function removeCode(code) {
+        firebase.database().ref('codes/' + code).remove()
+            .then(() => {
+                alert('Code erfolgreich entfernt.');
+                loadActiveCodes();
+            })
+            .catch(error => {
+                alert('Fehler beim Entfernen des Codes: ' + error.message);
+            });
+    }
+
+    // Führt die Funktion zum Laden aktiver Codes beim Laden der Seite aus
+    window.onload = loadActiveCodes;
+
 </script>
 
 </body>
