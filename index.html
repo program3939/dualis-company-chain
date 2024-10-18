@@ -77,10 +77,9 @@
 <body>
     <div class="background"></div>
     <div class="container">
-        <h1>Willkommen zum WinDuet Lotto</h1>
-        <p>Gib deinen Spielcode ein, um deinen Code zu erhalten:</p>
+        <h1>Willkommen zum Role-Play Lotto</h1>
+        <p>Gib deinen Spielcode ein:</p>
         <input type="text" id="inputCode" class="code-input" maxlength="8" placeholder="8-stelliger Spielcode">
-        <button class="button" onclick="getCode()">Code erhalten</button>
         <p class="warning">⚠️ Bitte screenshotte deinen Code und sende ihn im Discord-Kanal "WinDuet"! ⚠️</p>
         <p class="warning">🕒 Warte bis Montag auf das Ergebnis! 🕒</p>
         <p id="result" class="result"></p>
@@ -117,30 +116,19 @@
             "90312764", "53478910", "27815493", "65872039", "94028137", "38192045", "12984750", "46723981", "57312864", "92074861"
         ];
 
-        function getCode() {
-            const inputCode = document.getElementById("inputCode").value;
-            const resultElement = document.getElementById("result");
+        const resultElement = document.getElementById("result");
 
-            // Überprüfen, ob der Spielcode gültig ist
+        // Überprüfen, ob der Spielcode gültig ist und anzeigen
+        document.getElementById("inputCode").addEventListener('input', function () {
+            const inputCode = this.value;
             if (spielCodes.includes(inputCode)) {
-                // Generiere einen zufälligen 8-stelligen Code
-                const randomCode = generateRandomCode();
-                resultElement.innerHTML = "Dein Code ist: <span class='win-code'>" + randomCode + "</span>";
+                resultElement.innerHTML = "Code gültig! Bitte screenshotte diesen Code.";
                 resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
             } else {
                 resultElement.innerHTML = "Ungültiger Spielcode. Bitte versuche es erneut.";
                 resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
             }
-        }
-
-        // Funktion zur Generierung eines zufälligen 8-stelligen Codes
-        function generateRandomCode() {
-            let randomCode = '';
-            for (let i = 0; i < 8; i++) {
-                randomCode += Math.floor(Math.random() * 10); // Zufällige Ziffern von 0-9
-            }
-            return randomCode;
-        }
+        });
 
         // Hintergrundmusik automatisch starten
         document.getElementById("background-music").play();
