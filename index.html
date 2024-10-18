@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WinDuet Role-Play Lotto</title>
+    <title>Role-Play Lotto</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -112,11 +112,12 @@
 <body>
     <div class="background"></div>
     <div class="container">
-        <h1>Willkommen zum WinDuet Lotto</h1>
+        <h1>Willkommen zum Role-Play Lotto</h1>
         <p>Gib deinen Spielcode ein:</p>
         <input type="text" id="inputCode" class="code-input" maxlength="8" placeholder="8-stelliger Spielcode">
         <button class="button" id="submitCode">Code Einlösen</button>
         <p id="result" class="result"></p>
+        <p id="usedCode" class="result"></p> <!-- Platz für den verwendeten Code -->
         <p id="warning" class="warning">Bitte screenshotte deinen Code und sende ihn im Discord-Kanal "WinDuet"! Warte bis Montag auf das Ergebnis!</p>
 
         <div id="grid" class="grid"></div> <!-- Raster für zufällige Zahlen -->
@@ -146,15 +147,22 @@
             "91827354", "67120384", "23456179", "90321478", "10374826", "49302178", "38475612", "67219830", "27364985", "39482750",
             "32897564", "98123754", "45876301", "90127346", "58903412", "09752148", "13249087", "49283176", "53829476", "19483275",
             "92037481", "54612390", "79843120", "67302849", "91028374", "87542091", "38127459", "09384751", "68973240", "24587601",
-            "79486102", "58019274", "12048357", "43125968", "27364095", "68942031", "24058719", "31490827", "39284751", "10483927",
-            "94028315", "58029374", "84321976", "02457638", "49731826", "58023712", "19483702", "25697410", "34589012", "75294136",
-            "90127384", "23019857", "98421573", "67012389", "35419827", "58732064", "12347856", "98236741", "65478012", "90843125",
-            "72385901", "12398465", "91028364", "58491276", "29138476", "57948021", "38029174", "85721340", "47653920", "29847365"
+            "79486102", "58019274", "12048367", "09837461", "74829103", "54321098", "79012354", "82163497", "14286753", "96541028",
+            "36425891", "23465890", "20134768", "17489032", "62351984", "90732145", "12047893", "81924360", "51234870", "48932175",
+            "47862390", "34127856", "91023784", "60897132", "25048367", "38194712", "84056712", "14286903", "73849561", "72038495",
+            "19382456", "98213470", "75982013", "32189047", "09827134", "98214567", "53429071", "16928374", "02834795", "87513468",
+            "73984526", "04982716", "21894563", "40392187", "78904236", "89754321", "45601239", "17428635", "28934150", "47293864",
+            "18920473", "64028491", "23938461", "57281034", "76301948", "47126358", "56082374", "89102734", "94231058", "32019486",
+            "68012347", "28346590", "94721863", "03947261", "17893240", "49821357", "63489210", "75910234", "20489715", "97384160"
         ];
 
         const resultElement = document.getElementById("result");
+        const usedCodeElement = document.getElementById("usedCode"); // Element für den verwendeten Code
         const warningElement = document.getElementById("warning");
         const gridElement = document.getElementById("grid");
+
+        // Überprüfen, ob ein Code bereits verwendet wurde
+        const usedCodes = JSON.parse(localStorage.getItem('usedCodes')) || [];
 
         // Funktion zum Generieren eines Rasters mit zufälligen Zahlen
         function generateRandomGrid() {
@@ -173,13 +181,26 @@
         document.getElementById("submitCode").addEventListener('click', function () {
             const inputCode = document.getElementById("inputCode").value;
             const codeIndex = spielCodes.indexOf(inputCode);
-            if (codeIndex !== -1) {
-                // Code ist gültig, entferne ihn aus der Liste
+
+            // Überprüfen, ob der Code bereits verwendet wurde
+            if (codeIndex !== -1 && !usedCodes.includes(inputCode)) {
+                // Code ist gültig und wurde nicht verwendet, entferne ihn aus der Liste
                 spielCodes.splice(codeIndex, 1); // Entferne den Code aus der Liste
+                usedCodes.push(inputCode); // Füge den Code zu den verwendeten Codes hinzu
+                localStorage.setItem('usedCodes', JSON.stringify(usedCodes)); // Speichere in Local Storage
                 resultElement.innerHTML = "Gültig! Bitte screenshotte diesen Code.";
+                usedCodeElement.innerHTML = "Verwendeter Code: " + inputCode; // Zeige den verwendeten Code an
                 resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
                 warningElement.style.opacity = 1;  // Mach die Warnung sichtbar
                 generateRandomGrid(); // Raster mit zufälligen Zahlen generieren
+            } else if (usedCodes.includes(inputCode)) {
+                resultElement.innerHTML = "Dieser Code wurde bereits verwendet.";
+                resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
+                
+                // Ungültige Meldung nach 4 Sekunden ausblenden
+                setTimeout(function() {
+                    resultElement.style.opacity = 0;  // Ergebnis ausblenden
+                }, 4000);  // 4000 Millisekunden = 4 Sekunden
             } else {
                 resultElement.innerHTML = "Ungültiger Spielcode. Bitte versuche es erneut.";
                 resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
