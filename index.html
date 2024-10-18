@@ -107,16 +107,22 @@
             "58274903", "41093875", "15098237", "20937148", "32014795", "41723859", "23478195", "52719403", "62134758", "50812793"
         ];
 
-        function playGame() {
-            const inputCode = document.getElementById("inputCode").value;
-            const resultElement = document.getElementById("result");
+     function playGame() {
+    const inputCode = document.getElementById("inputCode").value;
+    const resultElement = document.getElementById("result");
 
-            if (spielCodes.includes(inputCode)) {
-                const winCode = gewinnCodes[Math.floor(Math.random() * gewinnCodes.length)];
-                resultElement.innerHTML = "Gewonnen! Dein Gewinncode ist: <span class='win-code'>" + winCode + "</span>";
-            } else {
-                resultElement.innerHTML = "Ungültiger Spielcode. Bitte versuche es erneut.";
-            }
+    // Überprüfen, ob der Spielcode gültig ist und noch nicht verwendet wurde
+    const codeIndex = spielCodes.indexOf(inputCode);
+    if (codeIndex !== -1) {
+        // Entferne den Code aus der Liste, um eine doppelte Nutzung zu verhindern
+        const winCode = gewinnCodes[Math.floor(Math.random() * gewinnCodes.length)];
+        resultElement.innerHTML = "Gewonnen! Dein Gewinncode ist: <span class='win-code'>" + winCode + "</span>";
+        spielCodes.splice(codeIndex, 1);  // Entferne den verwendeten Code
+    } else {
+        resultElement.innerHTML = "Ungültiger Spielcode. Bitte versuche es erneut.";
+    }
+}
+
         }
     </script>
 </body>
