@@ -164,7 +164,10 @@
         // Überprüfen, ob der Spielcode gültig ist und anzeigen
         document.getElementById("submitCode").addEventListener('click', function () {
             const inputCode = document.getElementById("inputCode").value;
-            if (spielCodes.includes(inputCode)) {
+            const codeIndex = spielCodes.indexOf(inputCode);
+            if (codeIndex !== -1) {
+                // Code ist gültig, entferne ihn aus der Liste
+                spielCodes.splice(codeIndex, 1); // Entferne den Code aus der Liste
                 resultElement.innerHTML = "Gültig! Bitte screenshotte diesen Code.";
                 resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
                 warningElement.style.opacity = 1;  // Mach die Warnung sichtbar
