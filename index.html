@@ -52,9 +52,11 @@
             opacity: 0;
             transition: opacity 0.5s;
         }
-        .win-code {
-            color: #00ff00;
+        .warning {
+            color: #ff0000;
             font-weight: bold;
+            margin-top: 20px;
+            font-size: 20px;
         }
         .background {
             position: absolute;
@@ -70,37 +72,18 @@
             0% { background-color: rgba(0, 0, 0, 0.5); }
             100% { background-color: rgba(0, 0, 0, 0.8); }
         }
-        .admin-section {
-            margin-top: 50px;
-            background-color: rgba(255, 204, 0, 0.9);
-            padding: 20px;
-            border-radius: 15px;
-        }
-        .admin-input {
-            padding: 10px;
-            font-size: 20px;
-            width: 250px;
-            margin-bottom: 20px;
-            border: none;
-            border-radius: 5px;
-        }
     </style>
 </head>
 <body>
     <div class="background"></div>
     <div class="container">
-        <h1>Willkommen zum Role-Play Lotto</h1>
-        <p>Klicke auf den Button, um deinen Code zu erhalten:</p>
-        <button class="button" onclick="generateUserCode()">Code generieren</button>
-        <p id="userCode" class="result"></p>
-    </div>
-
-    <div class="admin-section">
-        <h2>Admin-Bereich</h2>
-        <p>Gib den Code ein, um die Gültigkeit zu überprüfen:</p>
-        <input type="text" id="adminCode" class="admin-input" maxlength="8" placeholder="Code eingeben">
-        <button class="button" onclick="checkAdminCode()">Code prüfen</button>
-        <p id="adminResult" class="result"></p>
+        <h1>Willkommen zum WinDuet Lotto</h1>
+        <p>Gib deinen Spielcode ein, um deinen Code zu erhalten:</p>
+        <input type="text" id="inputCode" class="code-input" maxlength="8" placeholder="8-stelliger Spielcode">
+        <button class="button" onclick="getCode()">Code erhalten</button>
+        <p class="warning">⚠️ Bitte screenshotte deinen Code und sende ihn im Discord-Kanal "WinDuet"! ⚠️</p>
+        <p class="warning">🕒 Warte bis Montag auf das Ergebnis! 🕒</p>
+        <p id="result" class="result"></p>
     </div>
 
     <audio id="background-music" loop>
@@ -109,42 +92,54 @@
     </audio>
 
     <script>
-        // 500 Spielcodes
+        // 250 Spielcodes
         const spielCodes = [
             "27485921", "65819027", "90234812", "48273654", "19507382", "67051234", "39472168", "87602459", "32179834", "04985726",
-            // ... (fülle mit weiteren Codes bis insgesamt 500)
-            "22098456", "56342178", "98134526", "84123076", "43567892", "90817342", "67123490", "19837564", "25031487", "48092013"
+            "48852341", "11236548", "23654879", "89504137", "01234678", "67890123", "54326789", "09812345", "65432198", "87453210",
+            "22098456", "56342178", "98134526", "84123076", "43567892", "90817342", "67123490", "19837564", "25031487", "48092013",
+            "34210876", "78459301", "23478910", "45987123", "78903214", "54321678", "67890789", "21098765", "43517680", "09876543",
+            "65478912", "34567890", "23948751", "97512048", "19457830", "80349167", "13247680", "56874321", "89045673", "21039876",
+            "30123948", "12345678", "87654321", "19283746", "56473829", "38475621", "49562837", "83746210", "72938465", "54678901",
+            "37891023", "45961234", "91827364", "01928374", "85742136", "19457683", "23019847", "56019284", "67183920", "09837465",
+            "14785239", "86420975", "32145678", "90827364", "59321048", "07549321", "38765429", "46782901", "20183947", "57283901",
+            "89034567", "65412309", "13579246", "28654730", "47890213", "19847365", "07513248", "23948567", "38194276", "71023948",
+            "58392014", "49576012", "38924567", "29478315", "62134978", "94561237", "30987241", "53489712", "78126349", "83746029",
+            "28463957", "98123407", "10293847", "57819402", "14678930", "30194576", "79238465", "46715290", "56473829", "19876540",
+            "82749561", "94013826", "01234567", "83942176", "29384750", "78901234", "56789012", "45328976", "67890123", "78945612",
+            "34028195", "85712049", "46210378", "32904871", "76851294", "12378904", "56701239", "45678123", "12394756", "85423176",
+            "91827354", "67120384", "23456179", "90321478", "10374826", "49302178", "38475612", "67219830", "27364985", "39482750",
+            "32897564", "98123754", "45876301", "90127346", "58903412", "09752148", "13249087", "49283176", "53829476", "19483275",
+            "92037481", "54612390", "79843120", "67302849", "91028374", "87542091", "38127459", "09384751", "68973240", "24587601",
+            "79486102", "58019274", "12048357", "43125968", "27364095", "68942031", "24058719", "31490827", "49516082", "10375948",
+            "92741056", "84620135", "76324501", "87543019", "29438765", "65827304", "83917245", "67801324", "12039476", "95341820",
+            "57293048", "23904178", "18653047", "98173465", "49583716", "89012345", "65401239", "12389074", "38760124", "92037861",
+            "24376901", "31987254", "78415620", "21984703", "86092714", "12347890", "54627301", "29348175", "87123940", "58392076",
+            "90312764", "53478910", "27815493", "65872039", "94028137", "38192045", "12984750", "46723981", "57312864", "92074861"
         ];
 
-        // 500 Gewinncodes
-        const gewinnCodes = [
-            "48932015", "67421389", "90234876", "12039475", "98104276", "56048329", "31472859", "79512048", "61274839", "78230164",
-            // ... (fülle mit weiteren Codes bis insgesamt 500)
-            "30289417", "48213079", "59102348", "12347892", "74829103", "65284739", "20481765", "90341278", "56024913", "78934156"
-        ];
+        function getCode() {
+            const inputCode = document.getElementById("inputCode").value;
+            const resultElement = document.getElementById("result");
 
-        let currentUserCode = ""; // Variable für den aktuellen Benutzer-Code
-
-        // Funktion um einen Benutzer-Code zu generieren
-        function generateUserCode() {
-            const randomIndex = Math.floor(Math.random() * spielCodes.length);
-            currentUserCode = spielCodes[randomIndex];
-            document.getElementById("userCode").innerHTML = "Dein Code: <span class='win-code'>" + currentUserCode + "</span>";
-            document.getElementById("userCode").style.opacity = 1;  // Mach das Ergebnis sichtbar
+            // Überprüfen, ob der Spielcode gültig ist
+            if (spielCodes.includes(inputCode)) {
+                // Generiere einen zufälligen 8-stelligen Code
+                const randomCode = generateRandomCode();
+                resultElement.innerHTML = "Dein Code ist: <span class='win-code'>" + randomCode + "</span>";
+                resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
+            } else {
+                resultElement.innerHTML = "Ungültiger Spielcode. Bitte versuche es erneut.";
+                resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
+            }
         }
 
-        // Funktion um den Code im Admin-Bereich zu prüfen
-        function checkAdminCode() {
-            const adminInputCode = document.getElementById("adminCode").value;
-            const adminResultElement = document.getElementById("adminResult");
-
-            // Überprüfen, ob der Admin-Code gültig ist
-            if (spielCodes.includes(adminInputCode)) {
-                adminResultElement.innerHTML = "Der Code <span class='win-code'>" + adminInputCode + "</span> ist gültig!";
-            } else {
-                adminResultElement.innerHTML = "Der Code <span class='win-code'>" + adminInputCode + "</span> ist ungültig.";
+        // Funktion zur Generierung eines zufälligen 8-stelligen Codes
+        function generateRandomCode() {
+            let randomCode = '';
+            for (let i = 0; i < 8; i++) {
+                randomCode += Math.floor(Math.random() * 10); // Zufällige Ziffern von 0-9
             }
-            adminResultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
+            return randomCode;
         }
 
         // Hintergrundmusik automatisch starten
