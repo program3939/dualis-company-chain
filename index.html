@@ -60,6 +60,22 @@
             opacity: 0;
             transition: opacity 0.5s;
         }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .grid-item {
+            background-color: rgba(255, 204, 0, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 24px;
+            color: #1a1a1a;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+        }
         .background {
             position: absolute;
             top: 0;
@@ -85,6 +101,8 @@
         <button class="button" id="submitCode">Code Einlösen</button>
         <p id="result" class="result"></p>
         <p id="warning" class="warning">Bitte screenshotte deinen Code und sende ihn im Discord-Kanal "WinDuet"! Warte bis Montag auf das Ergebnis!</p>
+
+        <div id="grid" class="grid"></div> <!-- Raster für zufällige Zahlen -->
     </div>
 
     <audio id="background-music" loop>
@@ -128,6 +146,20 @@
 
         const resultElement = document.getElementById("result");
         const warningElement = document.getElementById("warning");
+        const gridElement = document.getElementById("grid");
+
+        // Funktion zum Generieren eines Rasters mit zufälligen Zahlen
+        function generateRandomGrid() {
+            gridElement.innerHTML = ""; // Vorherige Inhalte löschen
+            for (let i = 0; i < 9; i++) { // 3x3 Raster
+                const randomNum = Math.floor(Math.random() * 100); // Zufallszahl von 0 bis 99
+                const gridItem = document.createElement("div");
+                gridItem.className = "grid-item";
+                gridItem.innerText = randomNum;
+                gridElement.appendChild(gridItem);
+            }
+            gridElement.style.opacity = 1; // Raster sichtbar machen
+        }
 
         // Überprüfen, ob der Spielcode gültig ist und anzeigen
         document.getElementById("submitCode").addEventListener('click', function () {
@@ -136,6 +168,7 @@
                 resultElement.innerHTML = "Gültig! Bitte screenshotte diesen Code.";
                 resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
                 warningElement.style.opacity = 1;  // Mach die Warnung sichtbar
+                generateRandomGrid(); // Raster mit zufälligen Zahlen generieren
             } else {
                 resultElement.innerHTML = "Ungültiger Spielcode. Bitte versuche es erneut.";
                 resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
