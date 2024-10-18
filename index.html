@@ -22,13 +22,13 @@
             background-color: rgba(0, 0, 0, 0.8);
             border-radius: 15px;
             box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
-            max-width: 400px; /* Maximalbreite für größere Bildschirme */
+            max-width: 600px; /* Maximalbreite für größere Bildschirme */
             margin-left: auto;
             margin-right: auto; /* Zentriere die Box */
         }
         .code-input {
             padding: 10px;
-            font-size: 20px;
+            font-size: 24px; /* Größere Schrift für bessere Lesbarkeit */
             width: 100%; /* Füllt den verfügbaren Platz */
             margin-bottom: 20px;
             border: none;
@@ -39,8 +39,8 @@
             background-color: #ffcc00;
             color: #1a1a1a;
             border: none;
-            padding: 10px 20px;
-            font-size: 18px;
+            padding: 12px 20px;
+            font-size: 20px; /* Größere Schrift für den Button */
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
@@ -92,15 +92,15 @@
             100% { background-color: rgba(0, 0, 0, 0.8); }
         }
         @media (max-width: 600px) {
-            .container {
-                padding: 10px;
+            .code-input {
+                font-size: 20px; /* Kleinere Schrift für mobile Geräte */
             }
             .button {
                 padding: 10px;
-                font-size: 16px;
+                font-size: 18px; /* Kleinere Schrift für den Button */
             }
             .result, .warning {
-                font-size: 18px;
+                font-size: 20px; /* Kleinere Schrift für das Ergebnis */
             }
             .grid-item {
                 font-size: 20px;
@@ -145,15 +145,8 @@
             "82749561", "94013826", "01234567", "83942176", "29384750", "78901234", "56789012", "45328976", "67890123", "78945612",
             "34028195", "85712049", "46210378", "32904871", "76851294", "12378904", "56701239", "45678123", "12394756", "85423176",
             "91827354", "67120384", "23456179", "90321478", "10374826", "49302178", "38475612", "67219830", "27364985", "39482750",
-            "32897564", "98123754", "45876301", "90127346", "58903412", "09752148", "13249087", "49283176", "53829476", "19483275",
-            "92037481", "54612390", "79843120", "67302849", "91028374", "87542091", "38127459", "09384751", "68973240", "24587601",
-            "79486102", "58019274", "12048367", "09837461", "74829103", "54321098", "79012354", "82163497", "14286753", "96541028",
-            "36425891", "23465890", "20134768", "17489032", "62351984", "90732145", "12047893", "81924360", "51234870", "48932175",
-            "47862390", "34127856", "91023784", "60897132", "25048367", "38194712", "84056712", "14286903", "73849561", "72038495",
-            "19382456", "98213470", "75982013", "32189047", "09827134", "98214567", "53429071", "16928374", "02834795", "87513468",
-            "73984526", "04982716", "21894563", "40392187", "78904236", "89754321", "45601239", "17428635", "28934150", "47293864",
-            "18920473", "64028491", "23938461", "57281034", "76301948", "47126358", "56082374", "89102734", "94231058", "32019486",
-            "68012347", "28346590", "94721863", "03947261", "17893240", "49821357", "63489210", "75910234", "20489715", "97384160"
+            "32897564", "98123754", "45876301", "90127346", "58903412", "09752148", "13249087", "32087419", "76892043", "54207389",
+            "91028374", "64719823", "24097315", "78213409", "49582376", "67892145", "09384765", "57492038", "62198340", "83745120"
         ];
 
         const resultElement = document.getElementById("result");
@@ -184,7 +177,7 @@
 
             // Überprüfen, ob der Code bereits verwendet wurde
             if (codeIndex !== -1 && !usedCodes.includes(inputCode)) {
-                // Code ist gültig und wurde nicht verwendet, entferne ihn aus der Liste
+                // Code ist gültig und wurde nicht verwendet
                 spielCodes.splice(codeIndex, 1); // Entferne den Code aus der Liste
                 usedCodes.push(inputCode); // Füge den Code zu den verwendeten Codes hinzu
                 localStorage.setItem('usedCodes', JSON.stringify(usedCodes)); // Speichere in Local Storage
