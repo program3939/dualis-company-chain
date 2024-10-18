@@ -1,480 +1,123 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual-Coin</title>
+    <title>Role-Play Lotto</title>
     <style>
         body {
-            font-family: 'Georgia', serif;
-            background-color: #f0e6d6;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            border: 5px double #8c7564;
-        }
-
-        h1,
-        h2 {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
             text-align: center;
-            font-family: 'Times New Roman', serif;
-            color: #5a4d3f;
-            text-shadow: 1px 1px 2px #c2b2a1;
+            margin: 0;
+            padding: 0;
         }
-
         .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 100px;
         }
-
-        .form-group {
-            margin-bottom: 40px;
-            border-bottom: 2px solid #8c7564;
-            padding-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        input {
-            width: 100%;
+        .code-input {
             padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-family: 'Arial', sans-serif;
+            font-size: 20px;
+            width: 200px;
+            margin-bottom: 20px;
         }
-
-        button {
-            padding: 12px 18px;
+        .button {
+            background-color: #ffcc00;
+            color: #1a1a1a;
             border: none;
-            background: #8c7564;
-            color: white;
-            font-size: 16px;
-            font-family: 'Georgia', serif;
-            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 18px;
             cursor: pointer;
-            margin-top: 10px;
         }
-
-        button:hover {
-            background: #7b6654;
+        .button:hover {
+            background-color: #e6b800;
         }
-
-        .leaderboard,
-        .code-section,
-        .pending-transfers {
-            margin-top: 30px;
+        .result {
+            margin-top: 20px;
+            font-size: 24px;
         }
-
-        .transaction-status,
-        .code-message,
-        .admin-message {
-            color: red;
-            margin-top: 15px;
-        }
-
-        .success-message {
-            color: green;
-        }
-
-        .admin-panel {
-            margin-top: 40px;
-            padding: 20px;
-            background-color: #f5f0e1;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-        }
-
-        table,
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #8c7564;
-            color: white;
-        }
-
-        td {
-            background-color: #fff;
-        }
-
-        .spacer {
-            margin-bottom: 30px;
-        }
-
-        input:focus {
-            border-color: #8c7564;
-            outline: none;
-        }
-
-        button:focus {
-            outline: none;
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-
-            h1,
-            h2 {
-                font-size: 24px;
-            }
-
-            button {
-                width: 100%;
-            }
+        .win-code {
+            color: #00ff00;
         }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
 </head>
-
 <body>
+
     <div class="container">
-        <h1>Dual-Coin</h1>
-
-        <!-- Benutzerregistrierung -->
-        <div id="user-form" class="form-group">
-            <h2>Benutzerregistrierung</h2>
-            <label for="discordName">Discord-Name:</label>
-            <input type="text" id="discordName" required>
-
-            <label for="pin">PIN (max. 8 Zeichen):</label>
-            <input type="text" id="pin" maxlength="8" required>
-
-            <label for="transferNumber">5-stellige Überweisungsnummer:</label>
-            <input type="number" id="transferNumber" maxlength="5" required>
-
-            <button onclick="registerUser()">Registrieren</button>
-            <p id="registerMessage" class="admin-message"></p>
-        </div>
-
-        <div class="spacer"></div>
-
-        <!-- Coins Überweisen -->
-        <div id="transaction-form" class="form-group">
-            <h2>Coins Überweisen</h2>
-            <label for="from">Von (Discord-Name):</label>
-            <input type="text" id="fromUser" required>
-
-            <label for="to">An (Discord-Name):</label>
-            <input type="text" id="toUser" required>
-
-            <label for="amount">Betrag:</label>
-            <input type="number" id="amount" required>
-
-            <label for="transferNumberConfirm">Überweisungsnummer (Bestätigung):</label>
-            <input type="number" id="transferNumberConfirm" maxlength="5" required>
-
-            <button onclick="transferCoins()">Überweisen</button>
-            <p id="transactionStatus" class="transaction-status"></p>
-        </div>
-
-        <div class="spacer"></div>
-
-        <!-- Leaderboard -->
-        <div id="leaderboard" class="leaderboard">
-            <h2>Leaderboard</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>DC-Name</th>
-                        <th>Coins</th>
-                        <th>Überweisungsnummer</th>
-                    </tr>
-                </thead>
-                <tbody id="userList">
-                    <!-- Hier werden Benutzer hinzugefügt -->
-                </tbody>
-            </table>
-        </div>
-
-        <div class="spacer"></div>
-
-        <!-- Code eintragen -->
-        <div id="code-section" class="code-section">
-            <h2>Code eintragen</h2>
-            <label for="code">Code:</label>
-            <input type="text" id="codeInput">
-            <button onclick="submitCode()">Code eintragen</button>
-            <p id="codeMessage" class="code-message"></p>
-        </div>
-
-        <div class="spacer"></div>
-
-        <!-- Admin-Panel -->
-        <div id="admin-panel" class="admin-panel">
-            <h2>Admin-Bereich</h2>
-            <label for="adminUser">Benutzername:</label>
-            <input type="text" id="adminUser">
-            <label for="adminPass">Passwort:</label>
-            <input type="password" id="adminPass">
-            <button onclick="adminLogin()">Einloggen</button>
-
-            <div id="admin-controls" style="display:none;">
-                <h3>Überweisungen Bestätigen</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Sender</th>
-                            <th>Empfänger</th>
-                            <th>Betrag</th>
-                            <th>Zeitpunkt</th>
-                            <th>Aktion</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pendingTransactions"></tbody>
-                </table>
-
-                <h3>Aktive Codes</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Aktiver Code</th>
-                        </tr>
-                    </thead>
-                    <tbody id="activeCodes"></tbody>
-                </table>
-
-                <h3>Code Generator</h3>
-                <button onclick="generateCode()">Code generieren</button>
-                <ul id="generatedCodes"></ul>
-            </div>
-        </div>
+        <h1>Willkommen zum Role-Play Lotto</h1>
+        <p>Gib deinen 8-stelligen Code ein, um zu spielen:</p>
+        <input type="text" id="inputCode" class="code-input" maxlength="8" placeholder="12345678">
+        <br>
+        <button class="button" onclick="playGame()">Jetzt spielen</button>
+        <p id="result" class="result"></p>
     </div>
 
     <script>
-        // Firebase-Konfiguration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDGHc-MC0XZkZBPdhypCHoqmqTmHhhK5Ig",
-            authDomain: "dualis-company-chain.firebaseapp.com",
-            databaseURL: "https://dualis-company-chain-default-rtdb.firebaseio.com",
-            projectId: "dualis-company-chain",
-            storageBucket: "dualis-company-chain.appspot.com",
-            messagingSenderId: "521000433736",
-            appId: "1:521000433736:web:c5c60acd15c0d1b5f6c07d",
-            measurementId: "G-JEYQSXL8Z9"
-        };
+        // 500 Spielcodes
+        const spielCodes = [
+            "27485921", "65819027", "90234812", "48273654", "19507382", "67051234", "39472168", "87602459", "32179834", "04985726",
+            "51423890", "19837641", "76392108", "27658149", "98104327", "43759261", "62401983", "23096752", "67219384", "34982147",
+            "74012389", "61374920", "29568734", "80349216", "47392165", "92107854", "76824319", "54093271", "37159428", "29487613",
+            "18204359", "59413820", "46279103", "19382745", "82504937", "10937528", "68752194", "53179462", "84092317", "27964831",
+            "12084953", "48902137", "75263498", "34196725", "97843201", "62319584", "15698734", "87042396", "23948175", "51079426",
+            "86312498", "14927635", "73268419", "64817352", "27643198", "59238741", "84031279", "12746598", "67019423", "48257134",
+            "30219487", "76543829", "18493276", "49217658", "81274390", "91038721", "58021947", "24798365", "13487692", "90314287",
+            "71958324", "43269871", "14892753", "56234190", "70928413", "28413795", "37925846", "52864713", "19038725", "69452173",
+            "75104329", "42837951", "90257431", "68479321", "19537460", "60481739", "39107528", "78362194", "52698743", "87029451",
+            "34179862", "76842193", "62137485", "94725301", "50379462", "21843795", "13709485", "89034721", "75923846", "48319764",
+            "92834710", "61209487", "87395162", "31078452", "59042183", "72943895", "45281976", "10437529", "93827410", "65479132",
+            "18304752", "52719483", "84023976", "15948203", "76812347", "43287614", "29137468", "58012794", "92751034", "17483290",
+            "38204195", "47698231", "68241037", "50139476", "89342107", "24167390", "56483729", "97051243", "37298451", "81043765",
+            "26387142", "19473258", "85927304", "72613489", "90347215", "48375129", "16204387", "57094318", "84192763", "65743298",
+            "29317485", "86057123", "40127538", "23984567", "51829374", "47619520", "92041738", "38196274", "47352918", "75019462",
+            "92083714", "58247936", "31745289", "68123947", "79432510", "19367584", "25019843", "57304182", "81243679", "64791823",
+            "13024985", "79214368", "56083714", "93472815", "74091826", "12948367", "85374921", "21854670", "69023758", "78104935",
+            "45917382", "68234957", "35781294", "64250917", "93048576", "41823907", "59384721", "21958347", "70812346", "38491265",
+            "47105832", "61387924", "50279384", "12846590", "37429518", "96024873", "12785309", "28419375", "30719485", "40257389",
+            "19385027", "25184736", "61038729", "48592173", "73942158", "81093542", "46108529", "59712384", "72349501", "24381067",
+            "58491032", "92047381", "74385912", "67123458", "30179842", "89034172", "51792384", "23674985", "69325817", "47198236",
+            "29017348", "58347190", "81239754", "36428971", "54783290", "10948237", "82013479", "64539812", "29781340", "15027398",
+            "37615849", "49082135", "51429837", "71034958", "86417293", "49308274", "15748392", "60249381", "49821734", "20934857",
+            "30917485", "17432958", "84372196", "69021837", "21097385", "41029385", "93524710", "47320958", "79138425", "40981273",
+            "51823947", "34058271", "97258134", "23089415", "19572308", "57398142", "28410953", "10938754", "37498513", "41823905",
+            "30958217", "56498213", "20198345", "93724815", "57419283", "62873194", "91572304", "49308147", "80237419", "41653978"
+        ];
 
-        // Firebase initialisieren
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        // 500 Gewinncodes
+        const gewinnCodes = [
+            "59124830", "83047512", "74218304", "06572391", "23918475", "47189502", "92304175", "58397241", "37149620", "20158349",
+            "68491237", "14257839", "39562041", "70234918", "81407325", "26978431", "52048317", "63094718", "91824573", "47512398",
+            "37852419", "62710938", "91428735", "50173294", "27834651", "19387562", "67429813", "52491736", "80327654", "64012897",
+            "95021847", "18394726", "58247193", "36920814", "42197538", "60819572", "57342109", "82417530", "67192384", "15749032",
+            "94758321", "16483920", "50791834", "29013485", "80415973", "62198475", "23487190", "34987512", "81423097", "47390218",
+            "50432719", "27589134", "69031748", "72839465", "80519427", "16953287", "29314760", "37045189", "84127593", "65189342",
+            "47853209", "19384725", "62018473", "40957283", "32948715", "73159482", "49283715", "90421387", "56719483", "12479530",
+            "48213950", "21348759", "50387412", "81473095", "27184309", "19438725", "51832470", "23918476", "82049317", "43190857",
+            "12930475", "73019485", "43210857", "91204738", "58347192", "64713895", "93824710", "52783419", "24019783", "38049127",
+            "57413289", "91234785", "69381475", "23810479", "47198524", "59038427", "21753984", "82713459", "40975182", "50813294",
+            "73051294", "14837590", "29138764", "49382715", "53827419", "89014367", "12947385", "63749182", "95021748", "37024895",
+            "14798321", "68213479", "92410837", "48391752", "15378492", "52713984", "31078429", "51492378", "82014579", "19384751",
+            "60831479", "28197364", "47192385", "60518479", "42719385", "29310857", "14789324", "50719834", "62149387", "20837451",
+            "73194872", "62081374", "92318745", "21094385", "48192753", "34759182", "51028394", "28417935", "39148752", "23904857",
+            "52718394", "40132984", "31745208", "82734961", "54087132", "89374510", "20749813", "91348725", "40927135", "23957148",
+            "51209384", "67421835", "20374859", "41038527", "13428579", "58274913", "23819457", "29410857", "72934718", "13527984",
+            "80419257", "50321847", "12475983", "23810457", "75981234", "39284715", "94012875", "51734829", "31284975", "64019258",
+            "80547129", "13824795", "65019247", "12039475", "32014758", "94381725", "50947183", "34187209", "93014758", "20139475",
+            "58274903", "41093875", "15098237", "20937148", "32014795", "41723859", "23478195", "52719403", "62134758", "50812793"
+        ];
 
-        // Benutzerregistrierung
-        function registerUser() {
-            const discordName = document.getElementById("discordName").value;
-            const pin = document.getElementById("pin").value;
-            const transferNumber = document.getElementById("transferNumber").value;
+        function playGame() {
+            const inputCode = document.getElementById("inputCode").value;
+            const resultElement = document.getElementById("result");
 
-            if (discordName && pin && transferNumber) {
-                const newUser = {
-                    discordName: discordName,
-                    pin: pin,
-                    transferNumber: transferNumber,
-                    coins: 100 // Initiale Coins, z.B. 100
-                };
-                database.ref('users').push(newUser).then(() => {
-                    document.getElementById("registerMessage").textContent = "Erfolgreich registriert!";
-                    document.getElementById("registerMessage").classList.add('success-message');
-                    document.getElementById("discordName").value = '';
-                    document.getElementById("pin").value = '';
-                    document.getElementById("transferNumber").value = '';
-                    updateLeaderboard(); // Direktes Hinzufügen zum Leaderboard
-                }).catch(() => {
-                    document.getElementById("registerMessage").textContent = "Fehler bei der Registrierung.";
-                });
+            if (spielCodes.includes(inputCode)) {
+                const winCode = gewinnCodes[Math.floor(Math.random() * gewinnCodes.length)];
+                resultElement.innerHTML = "Gewonnen! Dein Gewinncode ist: <span class='win-code'>" + winCode + "</span>";
             } else {
-                document.getElementById("registerMessage").textContent = "Bitte alle Felder korrekt ausfüllen.";
+                resultElement.innerHTML = "Ungültiger Spielcode. Bitte versuche es erneut.";
             }
         }
-
-        // Coins Überweisen
-        function transferCoins() {
-            const fromUser = document.getElementById("fromUser").value;
-            const toUser = document.getElementById("toUser").value;
-            const amount = parseInt(document.getElementById("amount").value);
-            const transferNumberConfirm = document.getElementById("transferNumberConfirm").value;
-
-            if (fromUser && toUser && amount > 0 && transferNumberConfirm) {
-                database.ref('users').orderByChild('discordName').equalTo(fromUser).once('child_added', (snapshot) => {
-                    const fromUserData = snapshot.val();
-                    if (fromUserData.transferNumber == transferNumberConfirm) {
-                        const pendingTransfer = {
-                            fromUser: fromUser,
-                            toUser: toUser,
-                            amount: amount,
-                            timestamp: new Date().toLocaleString(),
-                            status: "In Bearbeitung"
-                        };
-                        database.ref('pendingTransfers').push(pendingTransfer).then(() => {
-                            document.getElementById("transactionStatus").textContent = "Überweisung in Bearbeitung.";
-                            document.getElementById("fromUser").value = '';
-                            document.getElementById("toUser").value = '';
-                            document.getElementById("amount").value = '';
-                            document.getElementById("transferNumberConfirm").value = '';
-                        }).catch(() => {
-                            document.getElementById("transactionStatus").textContent = "Fehler bei der Überweisung.";
-                        });
-                    } else {
-                        document.getElementById("transactionStatus").textContent = "Falsche Überweisungsnummer.";
-                    }
-                });
-            } else {
-                document.getElementById("transactionStatus").textContent = "Bitte alle Felder korrekt ausfüllen.";
-            }
-        }
-
-        // Code eintragen
-        function submitCode() {
-            const code = document.getElementById("codeInput").value;
-            if (code) {
-                database.ref('codes').orderByChild('code').equalTo(code).once('value').then(snapshot => {
-                    if (snapshot.exists()) {
-                        document.getElementById("codeMessage").textContent = "Code erfolgreich eingelöst!";
-                        document.getElementById("codeMessage").classList.add('success-message');
-                        // Code-Feld leeren
-                        document.getElementById("codeInput").value = '';
-                    } else {
-                        document.getElementById("codeMessage").textContent = "Ungültiger Code.";
-                    }
-                }).catch(() => {
-                    document.getElementById("codeMessage").textContent = "Fehler beim Einlösen des Codes.";
-                });
-            } else {
-                document.getElementById("codeMessage").textContent = "Bitte einen Code eingeben.";
-            }
-        }
-
-        // Admin Login und Überweisungen bestätigen
-        function adminLogin() {
-            const adminUser = document.getElementById("adminUser").value;
-            const adminPass = document.getElementById("adminPass").value;
-
-            if (adminUser === "Dualis" && adminPass === "28102006") {
-                document.getElementById("admin-controls").style.display = "block";
-                loadPendingTransfers();
-                loadActiveCodes();
-            } else {
-                alert("Ungültige Admin-Anmeldedaten");
-            }
-        }
-
-        function loadPendingTransfers() {
-            const pendingList = document.getElementById("pendingTransactions");
-            pendingList.innerHTML = '';
-            database.ref('pendingTransfers').once('value', (snapshot) => {
-                snapshot.forEach((childSnapshot) => {
-                    const transfer = childSnapshot.val();
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${transfer.fromUser}</td>
-                        <td>${transfer.toUser}</td>
-                        <td>${transfer.amount}</td>
-                        <td>${transfer.timestamp}</td>
-                        <td><button onclick="confirmTransfer('${childSnapshot.key}')">Bestätigen</button></td>
-                    `;
-                    pendingList.appendChild(row);
-                });
-            });
-        }
-
-        function confirmTransfer(transferId) {
-            database.ref('pendingTransfers/' + transferId).once('value', (snapshot) => {
-                const transfer = snapshot.val();
-                const fromUserRef = database.ref('users').orderByChild('discordName').equalTo(transfer.fromUser);
-                const toUserRef = database.ref('users').orderByChild('discordName').equalTo(transfer.toUser);
-
-                fromUserRef.once('child_added').then(fromSnapshot => {
-                    const fromUser = fromSnapshot.val();
-                    if (fromUser.coins >= transfer.amount) {
-                        fromUserRef.child(fromSnapshot.key).update({ coins: fromUser.coins - transfer.amount });
-
-                        toUserRef.once('child_added').then(toSnapshot => {
-                            const toUser = toSnapshot.val();
-                            toUserRef.child(toSnapshot.key).update({ coins: toUser.coins + transfer.amount });
-
-                            database.ref('pendingTransfers/' + transferId).remove();
-                            loadPendingTransfers();
-                            alert("Überweisung bestätigt.");
-                        });
-                    } else {
-                        alert("Nicht genügend Coins.");
-                    }
-                }).catch(() => {
-                    alert("Fehler beim Bestätigen der Überweisung.");
-                });
-            }).catch(() => {
-                alert("Fehler beim Laden der Überweisung.");
-            });
-        }
-
-        // Aktive Codes laden
-        function loadActiveCodes() {
-            const activeCodesList = document.getElementById("activeCodes");
-            activeCodesList.innerHTML = '';
-            database.ref('codes').once('value', (snapshot) => {
-                snapshot.forEach((childSnapshot) => {
-                    const code = childSnapshot.val().code;
-                    const row = document.createElement("tr");
-                    row.innerHTML = `<td>${code}</td>`;
-                    activeCodesList.appendChild(row);
-                });
-            }).catch(() => {
-                alert("Fehler beim Laden der aktiven Codes.");
-            });
-        }
-
-        // Code generieren
-        function generateCode() {
-            const newCode = Math.random().toString(36).substr(2, 8).toUpperCase();
-            database.ref('codes').push({ code: newCode }).then(() => {
-                const generatedList = document.getElementById("generatedCodes");
-                const li = document.createElement("li");
-                li.textContent = newCode;
-                generatedList.appendChild(li);
-                alert("Code erfolgreich generiert: " + newCode);
-            }).catch(() => {
-                alert("Fehler beim Generieren des Codes.");
-            });
-        }
-
-        // Leaderboard aktualisieren
-        function updateLeaderboard() {
-            const userList = document.getElementById("userList");
-            userList.innerHTML = '';
-            database.ref('users').orderByChild('coins').once('value', (snapshot) => {
-                snapshot.forEach((childSnapshot) => {
-                    const user = childSnapshot.val();
-                    const row = document.createElement("tr");
-                    row.innerHTML = `<td>${user.discordName}</td><td>${user.coins}</td><td>${user.transferNumber}</td>`;
-                    userList.appendChild(row);
-                });
-            }).catch(() => {
-                alert("Fehler beim Aktualisieren des Leaderboards.");
-            });
-        }
-
-        updateLeaderboard();
     </script>
 </body>
-
 </html>
