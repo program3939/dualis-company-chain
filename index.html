@@ -57,6 +57,8 @@
             font-weight: bold;
             margin-top: 20px;
             font-size: 20px;
+            opacity: 0;
+            transition: opacity 0.5s;
         }
         .background {
             position: absolute;
@@ -77,12 +79,12 @@
 <body>
     <div class="background"></div>
     <div class="container">
-        <h1>Willkommen zum Role-Play Lotto</h1>
+        <h1>Willkommen zum WinDuet Lotto</h1>
         <p>Gib deinen Spielcode ein:</p>
         <input type="text" id="inputCode" class="code-input" maxlength="8" placeholder="8-stelliger Spielcode">
-        <p class="warning">⚠️ Bitte screenshotte deinen Code und sende ihn im Discord-Kanal "WinDuet"! ⚠️</p>
-        <p class="warning">🕒 Warte bis Montag auf das Ergebnis! 🕒</p>
+        <button class="button" id="submitCode">Code Einlösen</button>
         <p id="result" class="result"></p>
+        <p id="warning" class="warning">Bitte screenshotte deinen Code und sende ihn im Discord-Kanal "WinDuet"! Warte bis Montag auf das Ergebnis!</p>
     </div>
 
     <audio id="background-music" loop>
@@ -117,13 +119,15 @@
         ];
 
         const resultElement = document.getElementById("result");
+        const warningElement = document.getElementById("warning");
 
         // Überprüfen, ob der Spielcode gültig ist und anzeigen
-        document.getElementById("inputCode").addEventListener('input', function () {
-            const inputCode = this.value;
+        document.getElementById("submitCode").addEventListener('click', function () {
+            const inputCode = document.getElementById("inputCode").value;
             if (spielCodes.includes(inputCode)) {
-                resultElement.innerHTML = "Code gültig! Bitte screenshotte diesen Code.";
+                resultElement.innerHTML = "Gültig! Bitte screenshotte diesen Code.";
                 resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
+                warningElement.style.opacity = 1;  // Mach die Warnung sichtbar
             } else {
                 resultElement.innerHTML = "Ungültiger Spielcode. Bitte versuche es erneut.";
                 resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
