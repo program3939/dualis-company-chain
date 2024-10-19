@@ -3,210 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WinDuet RolePlay Lotto</title>
+    <title>Casino Lotto Website</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #1a1a1a;
-            color: #fff;
+            font-family: Arial, sans-serif;
+            background-color: #282c34;
+            color: white;
             text-align: center;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-        .container {
-            position: relative;
-            margin-top: 50px;
-            z-index: 1;
             padding: 20px;
-            background-color: rgba(0, 0, 0, 0.8);
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
-            max-width: 600px; /* Maximalbreite für größere Bildschirme */
-            margin-left: auto;
-            margin-right: auto; /* Zentriere die Box */
         }
-        .code-input {
-            padding: 10px;
-            font-size: 24px; /* Größere Schrift für bessere Lesbarkeit */
-            width: 100%; /* Füllt den verfügbaren Platz */
+        #inputArea {
             margin-bottom: 20px;
-            border: none;
-            border-radius: 5px;
-            box-shadow: 0 0 5px rgba(255, 204, 0, 0.7);
         }
-        .button {
-            background-color: #ffcc00;
-            color: #1a1a1a;
-            border: none;
-            padding: 12px 20px;
-            font-size: 20px; /* Größere Schrift für den Button */
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
-            width: 100%; /* Füllt den verfügbaren Platz */
-        }
-        .button:hover {
-            background-color: #e6b800;
-        }
-        .result, .warning {
-            margin-top: 20px;
-            font-size: 24px;
+        #result {
             opacity: 0;
             transition: opacity 0.5s;
-        }
-        .warning {
-            color: #ff0000;
-            font-weight: bold;
-            font-size: 20px;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
             margin-top: 20px;
-            opacity: 0;
-            transition: opacity 0.5s;
         }
         .grid-item {
-            background-color: rgba(255, 204, 0, 0.5);
-            border-radius: 10px;
-            padding: 20px;
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background-color: #61dafb;
+            color: black;
+            margin: 5px;
             font-size: 24px;
-            color: #1a1a1a;
-            box-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+            line-height: 60px;
+            border-radius: 10px;
         }
-        .background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('https://www.transparenttextures.com/patterns/black-paper.png');
-            animation: backgroundAnimation 20s infinite alternate;
-            z-index: 0;
+        #grid {
+            display: none;
+            margin-top: 20px;
         }
-        @keyframes backgroundAnimation {
-            0% { background-color: rgba(0, 0, 0, 0.5); }
-            100% { background-color: rgba(0, 0, 0, 0.8); }
+        .warning {
+            color: red;
+            opacity: 0;
+            transition: opacity 0.5s;
         }
-        @media (max-width: 600px) {
-            .code-input {
-                font-size: 20px; /* Kleinere Schrift für mobile Geräte */
-            }
-            .button {
-                padding: 10px;
-                font-size: 18px; /* Kleinere Schrift für den Button */
-            }
-            .result, .warning {
-                font-size: 20px; /* Kleinere Schrift für das Ergebnis */
-            }
-            .grid-item {
-                font-size: 20px;
-                padding: 15px;
-            }
+        audio {
+            display: none; /* Audio wird nicht angezeigt */
         }
     </style>
 </head>
 <body>
-    <div class="background"></div>
-    <div class="container">
-        <h1>Willkommen zum WinDuet Lotto</h1>
-        <p>Gib deinen Spielcode ein:</p>
-        <input type="text" id="inputCode" class="code-input" maxlength="8" placeholder="8-stelliger Spielcode">
-        <button class="button" id="submitCode">Code Einlösen</button>
-        <p id="result" class="result"></p>
-        <p id="usedCode" class="result"></p> <!-- Platz für den verwendeten Code -->
-        <p id="warning" class="warning">Bitte screenshotte deinen Code und sende ihn im Discord-Kanal "WinDuet"! Warte bis Montag auf das Ergebnis!</p>
-
-        <div id="grid" class="grid"></div> <!-- Raster für zufällige Zahlen -->
-    </div>
-
+    <h1>Casino Lotto Spiel</h1>
     <audio id="background-music" loop>
-        <source src="https://drive.google.com/uc?id=1UE6MDfGOR80eXo4qkosCwOkAjjrwAO6s" type="audio/mpeg">
+        <source src="https://drive.google.com/uc?export=download&id=1UE6MDfGOR80eXo4qkosCwOkAjjrwAO6s" type="audio/mpeg">
         Dein Browser unterstützt keine Audio-Elemente.
     </audio>
+    <div id="inputArea">
+        <input type="text" id="inputCode" placeholder="Gib deinen Code ein" maxlength="8">
+        <button id="submitCode">Code einlösen</button>
+    </div>
+    <div id="warning" class="warning">Bitte screenshotte deinen Code!</div>
+    <div id="usedCode"></div>
+    <div id="result"></div>
+    <div id="grid"></div>
 
     <script>
-        // 250 Spielcodes
+        // 250 schwer zu erratende 8-stellige Codes
         const spielCodes = [
-            "27485921", "65819027", "90234812", "48273654", "19507382", "67051234", "39472168", "87602459", "32179834", "04985726",
-            "48852341", "11236548", "23654879", "89504137", "01234678", "67890123", "54326789", "09812345", "65432198", "87453210",
-            "22098456", "56342178", "98134526", "84123076", "43567892", "90817342", "67123490", "19837564", "25031487", "48092013",
-            "34210876", "78459301", "23478910", "45987123", "78903214", "54321678", "67890789", "21098765", "43517680", "09876543",
-            "65478912", "34567890", "23948751", "97512048", "19457830", "80349167", "13247680", "56874321", "89045673", "21039876",
-            "30123948", "12345678", "87654321", "19283746", "56473829", "38475621", "49562837", "83746210", "72938465", "54678901",
-            "37891023", "45961234", "91827364", "01928374", "85742136", "19457683", "23019847", "56019284", "67183920", "09837465",
-            "14785239", "86420975", "32145678", "90827364", "59321048", "07549321", "38765429", "46782901", "20183947", "57283901",
-            "89034567", "65412309", "13579246", "28654730", "47890213", "19847365", "07513248", "23948567", "38194276", "71023948",
-            "58392014", "49576012", "38924567", "29478315", "62134978", "94561237", "30987241", "53489712", "78126349", "83746029",
-            "28463957", "98123407", "10293847", "57819402", "14678930", "30194576", "79238465", "46715290", "56473829", "19876540",
-            "82749561", "94013826", "01234567", "83942176", "29384750", "78901234", "56789012", "45328976", "67890123", "78945612",
-            "34028195", "85712049", "46210378", "32904871", "76851294", "12378904", "56701239", "45678123", "12394756", "85423176",
-            "91827354", "67120384", "23456179", "90321478", "10374826", "49302178", "38475612", "67219830", "27364985", "39482750",
-            "32897564", "98123754", "45876301", "90127346", "58903412", "09752148", "13249087", "32087419", "76892043", "54207389",
-            "91028374", "64719823", "24097315", "78213409", "49582376", "67892145", "09384765", "57492038", "62198340", "83745120"
+            "A1B2C3D4", "E5F6G7H8", "I9J0K1L2", "M3N4O5P6", "Q7R8S9T0",
+            "U1V2W3X4", "Y5Z6A7B8", "C9D0E1F2", "G3H4I5J6", "K7L8M9N0",
+            "O1P2Q3R4", "S5T6U7V8", "W9X0Y1Z2", "A3B4C5D6", "E7F8G9H0",
+            "I1J2K3L4", "M5N6O7P8", "Q9R0S1T2", "U3V4W5X6", "Y7Z8A9B0",
+            "C1D2E3F4", "G5H6I7J8", "K9L0M1N2", "O3P4Q5R6", "S7T8U9V0",
+            "W1X2Y3Z4", "A5B6C7D8", "E9F0G1H2", "I3J4K5L6", "M7N8O9P0",
+            "Q1R2S3T4", "U5V6W7X8", "Y9Z0A1B2", "C3D4E5F6", "G7H8I9J0",
+            "K1L2M3N4", "O5P6Q7R8", "S9T0U1V2", "W3X4Y5Z6", "A7B8C9D0",
+            "E1F2G3H4", "I5J6K7L8", "M9N0O1P2", "Q3R4S5T6", "U7V8W9X0",
+            "Y1Z2A3B4", "C5D6E7F8", "G9H0I1J2", "K3L4M5N6", "O7P8Q9R0",
+            "S1T2U3V4", "W5X6Y7Z8", "A9B0C1D2", "E3F4G5H6", "I7J8K9L0",
+            "M1N2O3P4", "Q5R6S7T8", "U9V0W1X2", "Y3Z4A5B6", "C7D8E9F0",
+            "G1H2I3J4", "K5L6M7N8", "O9P0Q1R2", "S3T4U5V6", "W7X8Y9Z0",
+            "A1B2C3D5", "E4F5G6H7", "I8J9K0L1", "M2N3O4P5", "Q6R7S8T9",
+            "U0V1W2X3", "Y4Z5A6B7", "C8D9E0F1", "G2H3I4J5", "K6L7M8N9",
+            "O0P1Q2R3", "S4T5U6V7", "W8X9Y0Z1", "A2B3C4D5", "E6F7G8H9",
+            "I0J1K2L3", "M4N5O6P7", "Q8R9S0T1", "U2V3W4X5", "Y6Z7A8B9",
+            "C0D1E2F3", "G4H5I6J7", "K8L9M0N1", "O2P3Q4R5", "S6T7U8V9",
+            "W0X1Y2Z3", "A4B5C6D7", "E8F9G0H1", "I2J3K4L5", "M6N7O8P9",
+            "Q0R1S2T3", "U4V5W6X7", "Y8Z9A0B1", "C2D3E4F5", "G6H7I8J9",
+            "K0L1M2N3", "O4P5Q6R7", "S8T9U0V1", "W2X3Y4Z5", "A6B7C8D9",
+            "E0F1G2H3", "I4J5K6L7", "M8N9O0P1", "Q2R3S4T5", "U6V7W8X9",
+            "Y0Z1A2B3", "C4D5E6F7", "G8H9I0J1", "K2L3M4N5", "O6P7Q8R9",
+            "S0T1U2V3", "W4X5Y6Z7", "A8B9C0D1", "E2F3G4H5", "I6J7K8L9",
+            "M0N1O2P3", "Q4R5S6T7", "U8V9W0X1", "Y2Z3A4B5", "C6D7E8F9",
+            "G0H1I2J3", "K4L5M6N7", "O8P9Q0R1", "S2T3U4V5", "W6X7Y8Z9",
+            "A0B1C2D3", "E4F5G6H7", "I8J9K0L2", "M3N4O5P6", "Q7R8S9T0",
+            "U1V2W3X4", "Y5Z6A7B8", "C9D0E1F2", "G3H4I5J6", "K7L8M9N0",
+            "O1P2Q3R4", "S5T6U7V8", "W9X0Y1Z2", "A3B4C5D6", "E7F8G9H0",
+            "I1J2K3L4", "M5N6O7P8", "Q9R0S1T2", "U3V4W5X6", "Y7Z8A9B0",
+            "C1D2E3F4", "G5H6I7J8", "K9L0M1N2", "O3P4Q5R6", "S7T8U9V0",
+            "W1X2Y3Z4", "A5B6C7D8", "E9F0G1H2", "I3J4K5L6", "M7N8O9P0",
+            "Q1R2S3T4", "U5V6W7X8", "Y9Z0A1B2", "C3D4E5F6", "G7H8I9J0",
+            "K1L2M3N4", "O5P6Q7R8", "S9T0U1V2", "W3X4Y5Z6", "A7B8C9D0",
+            "E1F2G3H4", "I5J6K7L8", "M9N0O1P2", "Q3R4S5T6", "U7V8W9X0",
+            "Y1Z2A3B4", "C5D6E7F8", "G9H0I1J2", "K3L4M5N6", "O7P8Q9R0",
+            "S1T2U3V4", "W5X6Y7Z8", "A9B0C1D2", "E3F4G5H6", "I7J8K9L0",
+            "M1N2O3P4", "Q5R6S7T8", "U9V0W1X2", "Y3Z4A5B6", "C7D8E9F0",
+            "G1H2I3J4", "K5L6M7N8", "O9P0Q1R2", "S3T4U5V6", "W7X8Y9Z0",
+            "A1B2C3D5", "E4F5G6H7", "I8J9K0L1", "M2N3O4P5", "Q6R7S8T9",
+            "U0V1W2X3", "Y4Z5A6B7", "C8D9E0F1", "G2H3I4J5", "K6L7M8N9",
+            "O0P1Q2R3", "S4T5U6V7", "W8X9Y0Z1", "A2B3C4D5", "E6F7G8H9",
+            "I0J1K2L3", "M4N5O6P7", "Q8R9S0T1", "U2V3W4X5", "Y6Z7A8B9",
+            "C0D1E2F3", "G4H5I6J7", "K8L9M0N1", "O2P3Q4R5", "S6T7U8V9",
+            "W0X1Y2Z3", "A4B5C6D7", "E8F9G0H1", "I2J3K4L5", "M6N7O8P9",
+            "Q0R1S2T3", "U4V5W6X7", "Y8Z9A0B1", "C2D3E4F5", "G6H7I8J9",
+            "K0L1M2N3", "O4P5Q6R7", "S8T9U0V1", "W2X3Y4Z5", "A6B7C8D9"
         ];
 
-        const resultElement = document.getElementById("result");
-        const usedCodeElement = document.getElementById("usedCode"); // Element für den verwendeten Code
-        const warningElement = document.getElementById("warning");
-        const gridElement = document.getElementById("grid");
+        // Vergangene Codes, um Mehrfachnutzung zu verhindern
+        let usedCodes = [];
 
-        // Überprüfen, ob ein Code bereits verwendet wurde
-        const usedCodes = JSON.parse(localStorage.getItem('usedCodes')) || [];
-
-        // Funktion zum Generieren eines Rasters mit zufälligen Zahlen
-        function generateRandomGrid() {
-            gridElement.innerHTML = ""; // Vorherige Inhalte löschen
-            for (let i = 0; i < 9; i++) { // 3x3 Raster
-                const randomNum = Math.floor(Math.random() * 100); // Zufallszahl von 0 bis 99
-                const gridItem = document.createElement("div");
-                gridItem.className = "grid-item";
-                gridItem.innerText = randomNum;
-                gridElement.appendChild(gridItem);
-            }
-            gridElement.style.opacity = 1; // Raster sichtbar machen
-        }
-
-        // Überprüfen, ob der Spielcode gültig ist und anzeigen
-        document.getElementById("submitCode").addEventListener('click', function () {
-            const inputCode = document.getElementById("inputCode").value;
-            const codeIndex = spielCodes.indexOf(inputCode);
-
-            // Überprüfen, ob der Code bereits verwendet wurde
-            if (codeIndex !== -1 && !usedCodes.includes(inputCode)) {
-                // Code ist gültig und wurde nicht verwendet
-                spielCodes.splice(codeIndex, 1); // Entferne den Code aus der Liste
-                usedCodes.push(inputCode); // Füge den Code zu den verwendeten Codes hinzu
-                localStorage.setItem('usedCodes', JSON.stringify(usedCodes)); // Speichere in Local Storage
-                resultElement.innerHTML = "Gültig! Bitte screenshotte diesen Code.";
-                usedCodeElement.innerHTML = "Verwendeter Code: " + inputCode; // Zeige den verwendeten Code an
-                resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
-                warningElement.style.opacity = 1;  // Mach die Warnung sichtbar
-                generateRandomGrid(); // Raster mit zufälligen Zahlen generieren
-            } else if (usedCodes.includes(inputCode)) {
-                resultElement.innerHTML = "Dieser Code wurde bereits verwendet.";
-                resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
-                
-                // Ungültige Meldung nach 4 Sekunden ausblenden
-                setTimeout(function() {
-                    resultElement.style.opacity = 0;  // Ergebnis ausblenden
-                }, 4000);  // 4000 Millisekunden = 4 Sekunden
-            } else {
-                resultElement.innerHTML = "Ungültiger Spielcode. Bitte versuche es erneut.";
-                resultElement.style.opacity = 1;  // Mach das Ergebnis sichtbar
-                
-                // Ungültige Meldung nach 4 Sekunden ausblenden
-                setTimeout(function() {
-                    resultElement.style.opacity = 0;  // Ergebnis ausblenden
-                }, 4000);  // 4000 Millisekunden = 4 Sekunden
-            }
-        });
-
-        // Hintergrundmusik automatisch starten
         document.getElementById("background-music").play();
+
+        document.getElementById("submitCode").onclick = function() {
+            const inputCode = document.getElementById("inputCode").value;
+            const warning = document.getElementById("warning");
+            const resultDiv = document.getElementById("result");
+            const gridDiv = document.getElementById("grid");
+            const usedCodeDiv = document.getElementById("usedCode");
+
+            // Eingabe prüfen
+            if (spielCodes.includes(inputCode) && !usedCodes.includes(inputCode)) {
+                // Code gültig
+                usedCodes.push(inputCode); // Code als verwendet markieren
+                usedCodeDiv.innerText = "Verwendeter Code: " + inputCode;
+                resultDiv.style.opacity = 1;
+                resultDiv.innerHTML = "Herzlichen Glückwunsch! Hier sind Ihre Zahlen:";
+                
+                // Raster mit 16 zufälligen Zahlen generieren
+                const randomNumbers = Array.from({length: 16}, () => Math.floor(Math.random() * 100));
+                gridDiv.innerHTML = randomNumbers.map(num => `<div class="grid-item">${num}</div>`).join('');
+                gridDiv.style.display = 'block';
+                
+                // Warnung anzeigen
+                warning.style.opacity = 1;
+                setTimeout(() => {
+                    warning.style.opacity = 0;
+                }, 4000); // Warnung verschwindet nach 4 Sekunden
+            } else {
+                // Code ungültig
+                warning.innerText = "Ungültiger oder bereits verwendeter Code!";
+                warning.style.opacity = 1;
+                resultDiv.style.opacity = 0; // Ergebnis ausblenden
+                gridDiv.style.display = 'none'; // Raster ausblenden
+                setTimeout(() => {
+                    warning.style.opacity = 0;
+                }, 4000); // Warnung verschwindet nach 4 Sekunden
+            }
+        }
     </script>
 </body>
 </html>
